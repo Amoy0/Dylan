@@ -1,19 +1,22 @@
 import os
+import queue
 import re
 import subprocess
 import sys
 import threading
-import queue
-from PyQt5 import QtCore, QtGui, QtWidgets
+import time
+from datetime import datetime
+
 import PyQt5
-from PyQt5.QtGui import QIcon ,QTextCursor
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtGui import QIcon, QTextCursor
+
+
 import gui
 
-
-
-VERSION="Alpha 1.0.20220207"
+VERSION="Alpha 1.1.20220208"
 selfPath=os.path.split(os.path.realpath(__file__))[0]
-
 
 
 
@@ -23,116 +26,210 @@ class Ui_MainWindow(object):
     MainWindow.setObjectName("MainWindow")
     MainWindow.setEnabled(True)
     MainWindow.resize(800, 450)
-    MainWindow.setMinimumSize(QtCore.QSize(400, 225))
-    MainWindow.setMaximumSize(QtCore.QSize(1600, 16777215))
-    MainWindow.setWindowOpacity(1.0)
-    MainWindow.setAutoFillBackground(False)
+    MainWindow.setMinimumSize(QtCore.QSize(800, 450))
+    MainWindow.setMaximumSize(QtCore.QSize(800, 450))
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap("ico.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
     self.centralwidget = QtWidgets.QWidget(MainWindow)
     self.centralwidget.setObjectName("centralwidget")
-
-    self.console = QtWidgets.QTextEdit(self.centralwidget)
-    self.console.setGeometry(QtCore.QRect(239, 10, 551, 350))
-    font = QtGui.QFont()
-    font.setFamily("Courier")
-    font.setPointSize(10)
-    self.console.setReadOnly(True)
-
-    self.console.setFont(font)
-    self.console.setObjectName("console")
-
-    self.input = QtWidgets.QLineEdit(self.centralwidget)
-    self.input.setGeometry(QtCore.QRect(239, 370, 501, 51))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.input.setFont(font)
-    self.input.setFocusPolicy(QtCore.Qt.ClickFocus)
-    self.input.setReadOnly(False)
-    self.input.setObjectName("input")
-    self.enter = QtWidgets.QPushButton(self.centralwidget)
-    self.enter.setEnabled(True)
-    self.enter.setGeometry(QtCore.QRect(750, 370, 40, 51))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.enter.setFont(font)
-    self.enter.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-    self.enter.setAcceptDrops(False)
-    self.enter.setObjectName("enter")
-    self.label = QtWidgets.QLabel(self.centralwidget)
-    self.label.setGeometry(QtCore.QRect(10, 10, 200, 40))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.label.setFont(font)
-    self.label.setScaledContents(False)
-    self.label.setWordWrap(False)
-    self.label.setObjectName("label")
-    self.label_2 = QtWidgets.QLabel(self.centralwidget)
-    self.label_2.setGeometry(QtCore.QRect(10, 50, 200, 40))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.label_2.setFont(font)
-    self.label_2.setScaledContents(False)
-    self.label_2.setWordWrap(False)
-    self.label_2.setObjectName("label_2")
-    self.label_3 = QtWidgets.QLabel(self.centralwidget)
-    self.label_3.setGeometry(QtCore.QRect(10, 90, 200, 40))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.label_3.setFont(font)
-    self.label_3.setScaledContents(False)
-    self.label_3.setWordWrap(False)
-    self.label_3.setObjectName("label_3")
-    self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
-    self.groupBox.setGeometry(QtCore.QRect(10, 350, 225, 70))
-    self.groupBox.setObjectName("groupBox")
-    self.start = QtWidgets.QPushButton(self.groupBox)
-    self.start.setGeometry(QtCore.QRect(5, 15, 105, 51))
+    self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+    self.tabWidget.setGeometry(QtCore.QRect(0, 0, 800, 450))
+    self.tabWidget.setMovable(False)
+    self.tabWidget.setObjectName("tabWidget")
+    self.index = QtWidgets.QWidget()
+    self.index.setObjectName("index")
+    self.controls = QtWidgets.QGroupBox(self.index)
+    self.controls.setGeometry(QtCore.QRect(4, 310, 221, 91))
+    self.controls.setObjectName("controls")
+    self.start = QtWidgets.QPushButton(self.controls)
+    self.start.setGeometry(QtCore.QRect(5, 15, 100, 30))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
     self.start.setFont(font)
     self.start.setObjectName("start")
-    self.stop = QtWidgets.QPushButton(self.groupBox)
-    self.stop.setGeometry(QtCore.QRect(115, 15, 105, 51))
+    self.stop = QtWidgets.QPushButton(self.controls)
+    self.stop.setEnabled(False)
+    self.stop.setGeometry(QtCore.QRect(115, 15, 100, 30))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
     self.stop.setFont(font)
     self.stop.setObjectName("stop")
+    self.forcestop = QtWidgets.QPushButton(self.controls)
+    self.forcestop.setEnabled(False)
+    self.forcestop.setGeometry(QtCore.QRect(115, 50, 100, 30))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    font.setBold(False)
+    font.setItalic(False)
+    font.setWeight(50)
+    self.forcestop.setFont(font)
+    self.forcestop.setObjectName("forcestop")
+    self.restart = QtWidgets.QPushButton(self.controls)
+    self.restart.setEnabled(False)
+    self.restart.setGeometry(QtCore.QRect(5, 50, 100, 30))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.restart.setFont(font)
+    self.restart.setObjectName("restart")
+    self.consolegroup = QtWidgets.QGroupBox(self.index)
+    self.consolegroup.setGeometry(QtCore.QRect(230, 0, 561, 401))
+    self.consolegroup.setObjectName("consolegroup")
+    self.console = QtWidgets.QTextBrowser(self.consolegroup)
+    self.console.setGeometry(QtCore.QRect(10, 20, 541, 341))
+    font = QtGui.QFont()
+    font.setFamily("Courier")
+    font.setPointSize(10)
+    self.console.setFont(font)
+    self.console.setObjectName("console")
+    self.input = QtWidgets.QLineEdit(self.consolegroup)
+    self.input.setGeometry(QtCore.QRect(10, 370, 541, 21))
+    self.input.setObjectName("input")
+    self.info = QtWidgets.QGroupBox(self.index)
+    self.info.setGeometry(QtCore.QRect(9, 9, 211, 291))
+    self.info.setObjectName("info")
+    self.state = QtWidgets.QLabel(self.info)
+    self.state.setGeometry(QtCore.QRect(10, 25, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.state.setFont(font)
+    self.state.setScaledContents(False)
+    self.state.setWordWrap(False)
+    self.state.setObjectName("state")
+    self.version = QtWidgets.QLabel(self.info)
+    self.version.setGeometry(QtCore.QRect(10, 65, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.version.setFont(font)
+    self.version.setScaledContents(False)
+    self.version.setWordWrap(False)
+    self.version.setObjectName("version")
+    self.gamemode = QtWidgets.QLabel(self.info)
+    self.gamemode.setGeometry(QtCore.QRect(10, 105, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.gamemode.setFont(font)
+    self.gamemode.setScaledContents(False)
+    self.gamemode.setWordWrap(False)
+    self.gamemode.setObjectName("gamemode")
+    self.difficulty = QtWidgets.QLabel(self.info)
+    self.difficulty.setGeometry(QtCore.QRect(11, 145, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.difficulty.setFont(font)
+    self.difficulty.setScaledContents(False)
+    self.difficulty.setWordWrap(False)
+    self.difficulty.setObjectName("difficulty")
+    self.levelname = QtWidgets.QLabel(self.info)
+    self.levelname.setGeometry(QtCore.QRect(11, 185, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.levelname.setFont(font)
+    self.levelname.setScaledContents(False)
+    self.levelname.setWordWrap(False)
+    self.levelname.setObjectName("levelname")
+    self.port = QtWidgets.QLabel(self.info)
+    self.port.setGeometry(QtCore.QRect(11, 225, 191, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.port.setFont(font)
+    self.port.setScaledContents(False)
+    self.port.setWordWrap(False)
+    self.port.setObjectName("port")
+    self.tabWidget.addTab(self.index, "")
+    self.tab_2 = QtWidgets.QWidget()
+    self.tab_2.setObjectName("tab_2")
+    self.tabWidget.addTab(self.tab_2, "")
     self.statusbar = QtWidgets.QStatusBar(MainWindow)
-    self.statusbar.setObjectName("statusbar")
 
     self.retranslateUi(MainWindow)
+    self.tabWidget.setCurrentIndex(0)
     QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    self.input.setDisabled(True)
+    self.start.setDisabled(False)
+    self.restart.setDisabled(True)
+    self.stop.setDisabled(True)
+    self.forcestop.setDisabled(True)
+    self.start.clicked.connect(lambda: self.control(1))
+    self.stop.clicked.connect(lambda: self.control(2))
+    self.input.returnPressed.connect(self.transferCommand)
     formQueue.put(item={
-      "console":self.console
-    })
+      "console":self.console,
+      "input":self.input,
+      "start":self.start,
+      "stop":self.stop,
+      "restart":self.restart,
+      "forcestop":self.forcestop,
+      "state":self.state,
+      "version":self.version,
+      "gamemode":self.gamemode,
+      "difficulty":self.difficulty,
+      "levelname":self.levelname,
+      "port":self.port
+      })
 
   def retranslateUi(self, MainWindow):
     _translate = QtCore.QCoreApplication.translate
-    MainWindow.setWindowTitle(_translate("MainWindow", "Server Manager "+VERSION))
-    self.enter.setText(_translate("MainWindow", "△"))
-    self.label.setText(_translate("MainWindow", "TextLabel"))
-    self.label_2.setText(_translate("MainWindow", "TextLabel"))
-    self.label_3.setText(_translate("MainWindow", "TextLabel"))
-    self.groupBox.setTitle(_translate("MainWindow", "GroupBox"))
-    self.start.setText(_translate("MainWindow", "启动"))
-    self.stop.setText(_translate("MainWindow", "停止"))
+    MainWindow.setWindowTitle(_translate("MainWindow", "Dylan "+VERSION))
+    self.controls.setTitle(_translate("MainWindow", "控制"))
+    self.start.setText(_translate("MainWindow", "▶ 启动"))
+    self.stop.setText(_translate("MainWindow", "■ 停止"))
+    self.forcestop.setText(_translate("MainWindow", "强制关闭"))
+    self.restart.setText(_translate("MainWindow", "↻ 重启"))
+    self.consolegroup.setTitle(_translate("MainWindow", "控制台"))
+    self.input.setPlaceholderText(_translate("MainWindow", "> 在此输入指令..."))
+    self.info.setTitle(_translate("MainWindow", "服务器信息"))
+    self.state.setText(_translate("MainWindow", "状态："))
+    self.version.setText(_translate("MainWindow", "版本："))
+    self.gamemode.setText(_translate("MainWindow", "模式："))
+    self.difficulty.setText(_translate("MainWindow", "难度："))
+    self.levelname.setText(_translate("MainWindow", "存档名称："))
+    self.port.setText(_translate("MainWindow", "端口："))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.index), _translate("MainWindow", "主页"))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "unknown"))
 
-  def command(self):
-    command=input.lineEdit.text()
-    pass
+  def transferCommand(self):
+    text=self.input.text()
+    outputCommand(self.console,text)
+    self.input.setText("")
+  
+  def control(self,type):
+    global state
 
-def server(path):
+    if type==1 and state!=1:
+      state=1
+      # self.console.clearHistory()
+      time.sleep(1)
+      self.start.setDisabled(True)
+      self.restart.setDisabled(False)
+      self.stop.setDisabled(False)
+      self.forcestop.setDisabled(False)
+      self.input.setDisabled(False)
+    elif type==2:
+      # self.input.setDisabled(True)
+      # self.start.setDisabled(False)
+      # self.restart.setDisabled(True)
+      # self.stop.setDisabled(True)
+      # self.forcestop.setDisabled(True)
+      outputCommand(self.console,"stop")
+
+  
+
+def server(path,forms):
+  
+  global serverProcess,state
+  state=1
   lines=0
-
-  queue=formQueue.get()
-  console=queue["console"]
   serverProcess=subprocess.Popen(
     path,
     stdout=subprocess.PIPE,
@@ -141,41 +238,119 @@ def server(path):
     bufsize=1,
     encoding="UTF-8"
     )
-  while True:
-    log=serverProcess.stdout.readline()
-    log=log.replace("\n","")
-    if not re.search('^[\n\s\r]+?$',log) and log!="" and log!=None:
-      print(log)
-      logOut(console,log)
-    if bool(serverProcess.poll()):
-      print(f"服务器已退出，返回：{serverProcess.poll()}")
+  logOut(forms["console"],("[<span style='color:rgb(0,170,0)'>Dylan</span>]服务器启动中..."))
+  started=0
+  while state==1:
+    try:
+      log=serverProcess.stdout.readline()
+    except:
+      state=0
+    if log!=None:
+      log=outputRecognition(log)
+      if len(log)>200:
+        log=log[:100]+"[剩余{}字符未显示]".format(len(log)-100)# 防止渲染出错
+      if not re.search('^[\n\s\r]+?$',log) and log!="":
+        if re.search("Server\sstarted\.$",log) and started==0:
+          started=1
+        # if started==0:
+        #   if re.search('version|Version',log):
+        #     version=re.sub("^.+?version|Version(.?)$",r"\1",log)[:20]
+        #     forms["version"].setText("版本："+version)
+        #     pass
+        logOut(forms["console"],log)
+        print(log.replace("\n",""))
+
+    if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
+      state=0
+      logOut(forms["console"],"--------------------------")
+      logOut(forms["console"],("[<span style='color:rgb(0,170,0)'>Dylan</span>]进程已退出"))
+      time.sleep(0.05)
+      forms["input"].setDisabled(True)
+      forms["start"].setDisabled(False)
+      forms["restart"].setDisabled(True)
+      forms["stop"].setDisabled(True)
+      forms["forcestop"].setDisabled(True)
       break
-    lines+=1
-    if lines>1000:
-      console.insertText("")
 
+def outputCommand(console,command):
+  print(command)
+  serverProcess.stdin.write(command+"\n")
+  logOut(console,">"+command)
+  
 
-def logOut(console,text):
+def outputRecognition(log):
+  log=re.sub("^>.+\dm","",log)# 处理LL加载器下的输入前缀和颜色代码
+  log=re.sub("\[\d+?m","",log)
+  log=re.sub('[]',"",log)
+  log=re.sub('^> ',"",log)
+  log=re.sub('^>',"",log)
+  log=log.replace('/',"&#47;")# 转义防炸
+  log=log.replace('"',"&quot;")
+  log=log.replace(',',"&#44;")
+  log=log.replace(':',"&#58;")
+  log=log.replace("<","&lt;")
+  log=log.replace(">","&gt;")
+
+  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span style='color:rgb(85,85,255)'>\1</span>]",log)
+  log=re.sub("(WARN|warn|Warn)[\s]?\]",r"<span style='color:rgb(202,121,62)'><b>\1</b></span>]",log)
+  log=re.sub("(ERROR|error|Error)[\s]?\]",r"<span style='color:rgb(184,27,27)'><b>\1</b></span>]",log)
+  log=re.sub("(DEBUG|debug|Debug)[\s]?\]",r"<span style='color:rgb(170,0,170)'>\1</span>]",log)
+  log=re.sub("([0-9A-Za-z\.-]+?dll)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
+  log=re.sub("([0-9A-Za-z\.-]+?js)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
+  log=re.sub("([0-9A-Za-z\.-]+?py)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
+  return log
+
+def startServer():
+  global state
+  time.sleep(10)
+  if not formQueue.empty():
+    forms=formQueue.get()
+  _state=0
+  while True:
+    if state==1 and _state==0:
+      _state=1
+      server(path,forms)
+      _state=0
+    try:
+      if not MainWindow.isVisible():
+        break
+    except:
+      break
+    time.sleep(1)
+  exit()
+
+def logOut(console,log,html=1):
   cursor = console.textCursor()
   cursor.movePosition(QTextCursor.End)
-  cursor.insertText(text+"\n")
+  try:
+    if html==1:
+      cursor.insertHtml("<div>"+log+"</div>")
+    else:
+      cursor.insertText(log+"\n")
+  except:
+    pass
+  cursor.insertText("\n")
   console.setTextCursor(cursor)
   console.ensureCursorVisible()
 
 def gui():
-  app=QtWidgets.QApplication(sys.argv)  
-  MainWindow=QtWidgets.QWidget()  
-  ui=Ui_MainWindow()  
-  ui.setupUi(MainWindow)  
-  MainWindow.show()  
-  sys.exit(app.exec_())  
-
+  global MainWindow
+  app=QtWidgets.QApplication(sys.argv)
+  MainWindow=QtWidgets.QWidget()
+  ui=Ui_MainWindow()
+  ui.setupUi(MainWindow)
+  MainWindow.show()
+  sys.exit(app.exec_())
 formQueue=queue.Queue(maxsize=10)
+commandQueue=queue.Queue(maxsize=100)
 
-
-path=r"C:/Users/QZ_wht/Desktop/Programming/mcm/bedrock-server-1.18.2.03 (1)/bedrock_server.exe"
-
-gui_=threading.Thread(target=gui)
-gui_.start()
-server(path)
-exit()
+path=r"C:/Users/QZ_wht/Desktop/Download/yzm-1.18.2.03/start.bat"
+state=0
+#path=r"C:/Users/QZ_wht/Desktop/Programming/mcm/bedrock-server-1.18.2.03 (1)/bedrock_server.exe"
+# guiThread=threading.Thread(target=gui)
+# guiThread.daemon=1
+# guiThread.start()
+ServerThread=threading.Thread(target=startServer)
+ServerThread.daemon=1
+ServerThread.start()
+gui()
