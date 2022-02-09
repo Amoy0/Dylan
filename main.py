@@ -12,15 +12,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtGui import QIcon, QTextCursor
 
-
-import gui
-
-VERSION="Alpha 1.1.20220208"
-selfPath=os.path.split(os.path.realpath(__file__))[0]
-
-
-
-
 class Ui_MainWindow(object):
   def setupUi(self, MainWindow):
     MainWindow.setObjectName("MainWindow")
@@ -28,8 +19,7 @@ class Ui_MainWindow(object):
     MainWindow.resize(800, 450)
     MainWindow.setMinimumSize(QtCore.QSize(800, 450))
     MainWindow.setMaximumSize(QtCore.QSize(800, 450))
-    icon = QtGui.QIcon()
-    icon.addPixmap(QtGui.QPixmap("ico.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    MainWindow.setWindowIcon(QIcon(icoPath))
     self.centralwidget = QtWidgets.QWidget(MainWindow)
     self.centralwidget.setObjectName("centralwidget")
     self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -76,17 +66,17 @@ class Ui_MainWindow(object):
     self.restart.setFont(font)
     self.restart.setObjectName("restart")
     self.consolegroup = QtWidgets.QGroupBox(self.index)
-    self.consolegroup.setGeometry(QtCore.QRect(230, 0, 561, 401))
+    self.consolegroup.setGeometry(QtCore.QRect(230, 10, 561, 391))
     self.consolegroup.setObjectName("consolegroup")
     self.console = QtWidgets.QTextBrowser(self.consolegroup)
-    self.console.setGeometry(QtCore.QRect(10, 20, 541, 341))
+    self.console.setGeometry(QtCore.QRect(10, 20, 541, 331))
     font = QtGui.QFont()
     font.setFamily("Courier")
     font.setPointSize(10)
     self.console.setFont(font)
     self.console.setObjectName("console")
     self.input = QtWidgets.QLineEdit(self.consolegroup)
-    self.input.setGeometry(QtCore.QRect(10, 370, 541, 21))
+    self.input.setGeometry(QtCore.QRect(10, 360, 541, 21))
     self.input.setObjectName("input")
     self.info = QtWidgets.QGroupBox(self.index)
     self.info.setGeometry(QtCore.QRect(9, 9, 211, 291))
@@ -178,6 +168,7 @@ class Ui_MainWindow(object):
       "port":self.port
       })
 
+
   def retranslateUi(self, MainWindow):
     _translate = QtCore.QCoreApplication.translate
     MainWindow.setWindowTitle(_translate("MainWindow", "Dylan "+VERSION))
@@ -200,7 +191,7 @@ class Ui_MainWindow(object):
 
   def transferCommand(self):
     text=self.input.text()
-    outputCommand(self.console,text)
+    outputCommand(text)
     self.input.setText("")
   
   def control(self,type):
@@ -208,28 +199,22 @@ class Ui_MainWindow(object):
 
     if type==1 and state!=1:
       state=1
-      # self.console.clearHistory()
       time.sleep(1)
+      
       self.start.setDisabled(True)
-      self.restart.setDisabled(False)
       self.stop.setDisabled(False)
-      self.forcestop.setDisabled(False)
+      # self.restart.setDisabled(False)
+      # self.forcestop.setDisabled(False)
       self.input.setDisabled(False)
     elif type==2:
-      # self.input.setDisabled(True)
-      # self.start.setDisabled(False)
-      # self.restart.setDisabled(True)
-      # self.stop.setDisabled(True)
-      # self.forcestop.setDisabled(True)
-      outputCommand(self.console,"stop")
+      outputCommand("stop")
 
   
 
-def server(path,forms):
+def server(path):
   
   global serverProcess,state
   state=1
-  lines=0
   serverProcess=subprocess.Popen(
     path,
     stdout=subprocess.PIPE,
@@ -238,7 +223,8 @@ def server(path,forms):
     bufsize=1,
     encoding="UTF-8"
     )
-  logOut(forms["console"],("[<span style='color:rgb(0,170,0)'>Dylan</span>]服务器启动中..."))
+  logQueue.put("[<span style='color:rgb(0,122,204)'>Dylan</span>]服务器启动中...")
+
   started=0
   while state==1:
     try:
@@ -257,13 +243,13 @@ def server(path,forms):
         #     version=re.sub("^.+?version|Version(.?)$",r"\1",log)[:20]
         #     forms["version"].setText("版本："+version)
         #     pass
-        logOut(forms["console"],log)
+        logQueue.put(log)
         print(log.replace("\n",""))
 
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
       state=0
-      logOut(forms["console"],"--------------------------")
-      logOut(forms["console"],("[<span style='color:rgb(0,170,0)'>Dylan</span>]进程已退出"))
+      logQueue.put("--------------------")
+      logQueue.put(("[<span style='color:rgb(0,122,204)'>Dylan</span>]进程已退出"))
       time.sleep(0.05)
       forms["input"].setDisabled(True)
       forms["start"].setDisabled(False)
@@ -271,11 +257,31 @@ def server(path,forms):
       forms["stop"].setDisabled(True)
       forms["forcestop"].setDisabled(True)
       break
-
-def outputCommand(console,command):
+    try:
+      if not MainWindow.isVisible():
+        serverProcess.stdin.write("stop\n")
+        break
+    except:
+      serverProcess.stdin.write("stop\n")
+      break
+def logger():
+  global forms
+  forms=""
+  while True:
+    time.sleep(0.1)
+    if not formQueue.empty() and forms=="":
+      forms=formQueue.get()
+      time.sleep(2)
+      continue
+    if not logQueue.empty():
+      log=logQueue.get()
+      logOut(forms["console"],log)
+    else:
+      time.sleep(0.2)
+def outputCommand(command):
   print(command)
   serverProcess.stdin.write(command+"\n")
-  logOut(console,">"+command)
+  logQueue.put(">"+command)
   
 
 def outputRecognition(log):
@@ -291,7 +297,7 @@ def outputRecognition(log):
   log=log.replace("<","&lt;")
   log=log.replace(">","&gt;")
 
-  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span style='color:rgb(85,85,255)'>\1</span>]",log)
+  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span style='color:rgb(0,170,0)'>\1</span>]",log)
   log=re.sub("(WARN|warn|Warn)[\s]?\]",r"<span style='color:rgb(202,121,62)'><b>\1</b></span>]",log)
   log=re.sub("(ERROR|error|Error)[\s]?\]",r"<span style='color:rgb(184,27,27)'><b>\1</b></span>]",log)
   log=re.sub("(DEBUG|debug|Debug)[\s]?\]",r"<span style='color:rgb(170,0,170)'>\1</span>]",log)
@@ -302,19 +308,19 @@ def outputRecognition(log):
 
 def startServer():
   global state
-  time.sleep(10)
-  if not formQueue.empty():
-    forms=formQueue.get()
+  time.sleep(5)
   _state=0
   while True:
     if state==1 and _state==0:
       _state=1
-      server(path,forms)
+      server(setting["path"])
       _state=0
     try:
       if not MainWindow.isVisible():
+        serverProcess.stdin.write("stop\n")
         break
     except:
+      serverProcess.stdin.write("stop\n")
       break
     time.sleep(1)
   exit()
@@ -341,16 +347,30 @@ def gui():
   ui.setupUi(MainWindow)
   MainWindow.show()
   sys.exit(app.exec_())
-formQueue=queue.Queue(maxsize=10)
-commandQueue=queue.Queue(maxsize=100)
 
-path=r"C:/Users/QZ_wht/Desktop/Download/yzm-1.18.2.03/start.bat"
-state=0
-#path=r"C:/Users/QZ_wht/Desktop/Programming/mcm/bedrock-server-1.18.2.03 (1)/bedrock_server.exe"
-# guiThread=threading.Thread(target=gui)
-# guiThread.daemon=1
-# guiThread.start()
-ServerThread=threading.Thread(target=startServer)
-ServerThread.daemon=1
-ServerThread.start()
-gui()
+
+if __name__=="__main__":
+  VERSION="Alpha 1.2.20220209"
+  selfPath=os.path.split(os.path.realpath(__file__))[0]
+  icoPath=os.path.join(selfPath,"ico.png")
+  formQueue=queue.Queue(maxsize=10)
+  commandQueue=queue.Queue(maxsize=100)
+  logQueue=queue.Queue(maxsize=10000)
+  state=0
+  if os.path.exists(os.path.join(selfPath,"setting.ini")):
+    settingFile=open(os.path.join(selfPath,"setting.ini"),encoding="UTF-8")
+    setting={}
+    for line in settingFile:
+      if line.find('=') > 0:
+        strs = line.replace('\n', '').split('=')
+        setting[strs[0]] = strs[1]
+  else:
+    print("setting.ini文件不存在")
+    exit(os.system("pause"))
+  serverThread=threading.Thread(target=startServer)
+  serverThread.daemon=1
+  serverThread.start()
+  logThread=threading.Thread(target=logger)
+  logThread.daemon=1
+  logThread.start()
+  gui()
