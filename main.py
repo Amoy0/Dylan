@@ -26,9 +26,9 @@ class Ui_MainWindow(object):
     self.tabWidget.setGeometry(QtCore.QRect(0, 0, 800, 450))
     self.tabWidget.setMovable(False)
     self.tabWidget.setObjectName("tabWidget")
-    self.index = QtWidgets.QWidget()
-    self.index.setObjectName("index")
-    self.controls = QtWidgets.QGroupBox(self.index)
+    self.panel = QtWidgets.QWidget()
+    self.panel.setObjectName("panel")
+    self.controls = QtWidgets.QGroupBox(self.panel)
     self.controls.setGeometry(QtCore.QRect(4, 310, 221, 91))
     self.controls.setObjectName("controls")
     self.start = QtWidgets.QPushButton(self.controls)
@@ -65,7 +65,7 @@ class Ui_MainWindow(object):
     font.setPointSize(10)
     self.restart.setFont(font)
     self.restart.setObjectName("restart")
-    self.consolegroup = QtWidgets.QGroupBox(self.index)
+    self.consolegroup = QtWidgets.QGroupBox(self.panel)
     self.consolegroup.setGeometry(QtCore.QRect(230, 10, 561, 391))
     self.consolegroup.setObjectName("consolegroup")
     self.console = QtWidgets.QTextBrowser(self.consolegroup)
@@ -78,7 +78,7 @@ class Ui_MainWindow(object):
     self.input = QtWidgets.QLineEdit(self.consolegroup)
     self.input.setGeometry(QtCore.QRect(10, 360, 541, 21))
     self.input.setObjectName("input")
-    self.info = QtWidgets.QGroupBox(self.index)
+    self.info = QtWidgets.QGroupBox(self.panel)
     self.info.setGeometry(QtCore.QRect(9, 9, 211, 291))
     self.info.setObjectName("info")
     self.state = QtWidgets.QLabel(self.info)
@@ -135,10 +135,10 @@ class Ui_MainWindow(object):
     self.port.setScaledContents(False)
     self.port.setWordWrap(False)
     self.port.setObjectName("port")
-    self.tabWidget.addTab(self.index, "")
-    self.tab_2 = QtWidgets.QWidget()
-    self.tab_2.setObjectName("tab_2")
-    self.tabWidget.addTab(self.tab_2, "")
+    self.tabWidget.addTab(self.panel, "")
+    self.setting = QtWidgets.QWidget()
+    self.setting.setObjectName("setting")
+    self.tabWidget.addTab(self.setting, "")
     self.statusbar = QtWidgets.QStatusBar(MainWindow)
 
     self.retranslateUi(MainWindow)
@@ -186,8 +186,8 @@ class Ui_MainWindow(object):
     self.difficulty.setText(_translate("MainWindow", "难度："))
     self.levelname.setText(_translate("MainWindow", "存档名称："))
     self.port.setText(_translate("MainWindow", "端口："))
-    self.tabWidget.setTabText(self.tabWidget.indexOf(self.index), _translate("MainWindow", "主页"))
-    self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "unknown"))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.panel), _translate("MainWindow", "控制面板"))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.setting), _translate("MainWindow", "设置"))
 
   def transferCommand(self):
     text=self.input.text()
@@ -350,7 +350,7 @@ def gui():
 
 
 if __name__=="__main__":
-  VERSION="Alpha 1.2.20220209"
+  VERSION="Alpha 1.2.20220210_renamed"
   selfPath=os.path.split(os.path.realpath(__file__))[0]
   icoPath=os.path.join(selfPath,"ico.png")
   formQueue=queue.Queue(maxsize=10)
