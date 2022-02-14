@@ -7,10 +7,12 @@ import threading
 import time
 from datetime import datetime
 
-import PyQt5
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5 import QtCore, QtGui, QtWebEngineWidgets, QtWidgets
+from PyQt5.QtCore import QObject, QUrl, pyqtSlot
 from PyQt5.QtGui import QIcon, QTextCursor
+from PyQt5.QtWebChannel import QWebChannel
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
+
 
 class Ui_MainWindow(object):
   def setupUi(self, MainWindow):
@@ -19,12 +21,14 @@ class Ui_MainWindow(object):
     MainWindow.resize(800, 450)
     MainWindow.setMinimumSize(QtCore.QSize(800, 450))
     MainWindow.setMaximumSize(QtCore.QSize(800, 450))
-    MainWindow.setWindowIcon(QIcon(icoPath))
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap("ico.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    MainWindow.setWindowIcon(icon)
+    MainWindow.setWindowOpacity(1.0)
     self.centralwidget = QtWidgets.QWidget(MainWindow)
     self.centralwidget.setObjectName("centralwidget")
     self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
     self.tabWidget.setGeometry(QtCore.QRect(0, 0, 800, 450))
-    self.tabWidget.setMovable(False)
     self.tabWidget.setObjectName("tabWidget")
     self.panel = QtWidgets.QWidget()
     self.panel.setObjectName("panel")
@@ -68,16 +72,12 @@ class Ui_MainWindow(object):
     self.consolegroup = QtWidgets.QGroupBox(self.panel)
     self.consolegroup.setGeometry(QtCore.QRect(230, 10, 561, 391))
     self.consolegroup.setObjectName("consolegroup")
-    self.console = QtWidgets.QTextBrowser(self.consolegroup)
-    self.console.setGeometry(QtCore.QRect(10, 20, 541, 331))
-    font = QtGui.QFont()
-    font.setFamily("Courier")
-    font.setPointSize(10)
-    self.console.setFont(font)
-    self.console.setObjectName("console")
     self.input = QtWidgets.QLineEdit(self.consolegroup)
     self.input.setGeometry(QtCore.QRect(10, 360, 541, 21))
     self.input.setObjectName("input")
+    self.console = QtWebEngineWidgets.QWebEngineView(self.consolegroup)
+    self.console.setGeometry(QtCore.QRect(9, 19, 541, 331))
+    self.console.setObjectName("console")
     self.info = QtWidgets.QGroupBox(self.panel)
     self.info.setGeometry(QtCore.QRect(9, 9, 211, 291))
     self.info.setObjectName("info")
@@ -140,11 +140,18 @@ class Ui_MainWindow(object):
     self.setting.setObjectName("setting")
     self.tabWidget.addTab(self.setting, "")
     self.statusbar = QtWidgets.QStatusBar(MainWindow)
+    self.statusbar.setObjectName("statusbar")
 
     self.retranslateUi(MainWindow)
-    self.tabWidget.setCurrentIndex(0)
     QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    ############################################
+    global consolePath
+    consolePath="file:///"+str(consolePath).replace('\\',"/")
+    self.console.load(QUrl(consolePath))
+    channel.registerObject("obj", factorial)
+    self.console.page().setWebChannel(channel)
 
+    
     self.input.setDisabled(True)
     self.start.setDisabled(False)
     self.restart.setDisabled(True)
@@ -193,14 +200,14 @@ class Ui_MainWindow(object):
     text=self.input.text()
     outputCommand(text)
     self.input.setText("")
-  
+
   def control(self,type):
     global state
 
     if type==1 and state!=1:
       state=1
       time.sleep(1)
-      
+
       self.start.setDisabled(True)
       self.stop.setDisabled(False)
       # self.restart.setDisabled(False)
@@ -209,11 +216,26 @@ class Ui_MainWindow(object):
     elif type==2:
       outputCommand("stop")
 
-  
+  def changeState(void,data):
+    # self.ver
+    pass
+
+
+class Factorial(QObject):
+  @pyqtSlot(str, result=str)
+  def factorial(self,void):
+    if not logQueue.empty():
+      return logQueue.get()
+    else:
+      return "None"
+
+
 
 def server(path):
-  
-  global serverProcess,state
+  global serverProcess,state,stateData,forms
+  if not formQueue.empty() and forms=="":
+    forms=formQueue.get()
+
   state=1
   serverProcess=subprocess.Popen(
     path,
@@ -223,8 +245,9 @@ def server(path):
     bufsize=1,
     encoding="UTF-8"
     )
-  logQueue.put("[<span style='color:rgb(0,122,204)'>Dylan</span>]服务器启动中...")
-
+  logQueue.put("#cls")
+  logQueue.put("[<span class='dylan'>Dylan</span>]服务器启动中...")
+  stateData={}
   started=0
   while state==1:
     try:
@@ -232,24 +255,26 @@ def server(path):
     except:
       state=0
     if log!=None:
+      if started==0:
+        if log.find("version")>0 or log.find("Version")>0:
+          version=re.sub("^.+?version|Version(.?)$",r"\1",log)[:20]
+          stateData["version"]=version
+          pass
       log=outputRecognition(log)
       if len(log)>200:
-        log=log[:100]+"[剩余{}字符未显示]".format(len(log)-100)# 防止渲染出错
+        log=log[:200]+"...[剩余{}字符未显示]".format(len(log)-200)# 防止渲染出错
       if not re.search('^[\n\s\r]+?$',log) and log!="":
         if re.search("Server\sstarted\.$",log) and started==0:
+          Ui_MainWindow.changeState(None,stateData)
           started=1
-        # if started==0:
-        #   if re.search('version|Version',log):
-        #     version=re.sub("^.+?version|Version(.?)$",r"\1",log)[:20]
-        #     forms["version"].setText("版本："+version)
-        #     pass
-        logQueue.put(log)
+        if not logQueue.full():
+          logQueue.put(log)
         print(log.replace("\n",""))
 
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
       state=0
       logQueue.put("--------------------")
-      logQueue.put(("[<span style='color:rgb(0,122,204)'>Dylan</span>]进程已退出"))
+      logQueue.put(("[<span class='dylan'>Dylan</span>]进程已退出"))
       time.sleep(0.05)
       forms["input"].setDisabled(True)
       forms["start"].setDisabled(False)
@@ -264,25 +289,13 @@ def server(path):
     except:
       serverProcess.stdin.write("stop\n")
       break
-def logger():
-  global forms
-  forms=""
-  while True:
-    time.sleep(0.1)
-    if not formQueue.empty() and forms=="":
-      forms=formQueue.get()
-      time.sleep(2)
-      continue
-    if not logQueue.empty():
-      log=logQueue.get()
-      logOut(forms["console"],log)
-    else:
-      time.sleep(0.2)
+
 def outputCommand(command):
+  global serverProcess
   print(command)
   serverProcess.stdin.write(command+"\n")
   logQueue.put(">"+command)
-  
+
 
 def outputRecognition(log):
   log=re.sub("^>.+\dm","",log)# 处理LL加载器下的输入前缀和颜色代码
@@ -297,13 +310,13 @@ def outputRecognition(log):
   log=log.replace("<","&lt;")
   log=log.replace(">","&gt;")
 
-  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span style='color:rgb(0,170,0)'>\1</span>]",log)
-  log=re.sub("(WARN|warn|Warn)[\s]?\]",r"<span style='color:rgb(202,121,62)'><b>\1</b></span>]",log)
-  log=re.sub("(ERROR|error|Error)[\s]?\]",r"<span style='color:rgb(184,27,27)'><b>\1</b></span>]",log)
-  log=re.sub("(DEBUG|debug|Debug)[\s]?\]",r"<span style='color:rgb(170,0,170)'>\1</span>]",log)
-  log=re.sub("([0-9A-Za-z\.-]+?dll)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
-  log=re.sub("([0-9A-Za-z\.-]+?js)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
-  log=re.sub("([0-9A-Za-z\.-]+?py)",r"<span style='color:rgb(104,130,146)'><b>\1</b></span>",log)
+  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span class='info'>\1</span>]",log)
+  log=re.sub("(WARN|warn|Warn)[\s]?\]",r"<span class='warn'><b>\1</b></span>]",log)
+  log=re.sub("(ERROR|error|Error)[\s]?\]",r"<span class='error'><b>\1</b></span>]",log)
+  log=re.sub("(DEBUG|debug|Debug)[\s]?\]",r"<span class='debug'>\1</span>]",log)
+  log=re.sub("([0-9A-Za-z\.-]+?dll)",r"<span class='file'>\1</span>",log)
+  log=re.sub("([0-9A-Za-z\.-]+?js)",r"<span class='file'>\1</span>",log)
+  log=re.sub("([0-9A-Za-z\.-]+?py)",r"<span class='file'>\1</span>",log)
   return log
 
 def startServer():
@@ -325,23 +338,11 @@ def startServer():
     time.sleep(1)
   exit()
 
-def logOut(console,log,html=1):
-  cursor = console.textCursor()
-  cursor.movePosition(QTextCursor.End)
-  try:
-    if html==1:
-      cursor.insertHtml("<div>"+log+"</div>")
-    else:
-      cursor.insertText(log+"\n")
-  except:
-    pass
-  cursor.insertText("\n")
-  console.setTextCursor(cursor)
-  console.ensureCursorVisible()
 
 def gui():
   global MainWindow
   app=QtWidgets.QApplication(sys.argv)
+  app.setWindowIcon(QIcon(icoPath))
   MainWindow=QtWidgets.QWidget()
   ui=Ui_MainWindow()
   ui.setupUi(MainWindow)
@@ -350,13 +351,17 @@ def gui():
 
 
 if __name__=="__main__":
-  VERSION="Alpha 1.2.20220210_renamed"
+  channel = QWebChannel()
+  factorial = Factorial()
+  VERSION="Alpha 1.3.20220215"
   selfPath=os.path.split(os.path.realpath(__file__))[0]
+  consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
   formQueue=queue.Queue(maxsize=10)
   commandQueue=queue.Queue(maxsize=100)
   logQueue=queue.Queue(maxsize=10000)
   state=0
+  forms=""
   if os.path.exists(os.path.join(selfPath,"setting.ini")):
     settingFile=open(os.path.join(selfPath,"setting.ini"),encoding="UTF-8")
     setting={}
@@ -370,7 +375,4 @@ if __name__=="__main__":
   serverThread=threading.Thread(target=startServer)
   serverThread.daemon=1
   serverThread.start()
-  logThread=threading.Thread(target=logger)
-  logThread.daemon=1
-  logThread.start()
   gui()
