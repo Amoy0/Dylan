@@ -9,9 +9,8 @@ import time
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWebEngineWidgets, QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
-from PyQt5.QtGui import QIcon, QTextCursor
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWebChannel import QWebChannel
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
 
 class Ui_MainWindow(object):
@@ -79,10 +78,10 @@ class Ui_MainWindow(object):
     self.console.setGeometry(QtCore.QRect(9, 19, 541, 331))
     self.console.setObjectName("console")
     self.info = QtWidgets.QGroupBox(self.panel)
-    self.info.setGeometry(QtCore.QRect(9, 9, 211, 291))
+    self.info.setGeometry(QtCore.QRect(9, 9, 211, 271))
     self.info.setObjectName("info")
     self.state = QtWidgets.QLabel(self.info)
-    self.state.setGeometry(QtCore.QRect(10, 25, 191, 31))
+    self.state.setGeometry(QtCore.QRect(11, 20, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -91,7 +90,7 @@ class Ui_MainWindow(object):
     self.state.setWordWrap(False)
     self.state.setObjectName("state")
     self.version = QtWidgets.QLabel(self.info)
-    self.version.setGeometry(QtCore.QRect(10, 65, 191, 31))
+    self.version.setGeometry(QtCore.QRect(11, 50, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -100,7 +99,7 @@ class Ui_MainWindow(object):
     self.version.setWordWrap(False)
     self.version.setObjectName("version")
     self.gamemode = QtWidgets.QLabel(self.info)
-    self.gamemode.setGeometry(QtCore.QRect(10, 105, 191, 31))
+    self.gamemode.setGeometry(QtCore.QRect(11, 80, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -109,7 +108,7 @@ class Ui_MainWindow(object):
     self.gamemode.setWordWrap(False)
     self.gamemode.setObjectName("gamemode")
     self.difficulty = QtWidgets.QLabel(self.info)
-    self.difficulty.setGeometry(QtCore.QRect(11, 145, 191, 31))
+    self.difficulty.setGeometry(QtCore.QRect(12, 110, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -118,7 +117,7 @@ class Ui_MainWindow(object):
     self.difficulty.setWordWrap(False)
     self.difficulty.setObjectName("difficulty")
     self.levelname = QtWidgets.QLabel(self.info)
-    self.levelname.setGeometry(QtCore.QRect(11, 185, 191, 31))
+    self.levelname.setGeometry(QtCore.QRect(12, 140, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -127,7 +126,7 @@ class Ui_MainWindow(object):
     self.levelname.setWordWrap(False)
     self.levelname.setObjectName("levelname")
     self.port = QtWidgets.QLabel(self.info)
-    self.port.setGeometry(QtCore.QRect(11, 225, 191, 31))
+    self.port.setGeometry(QtCore.QRect(12, 170, 60, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
@@ -135,15 +134,130 @@ class Ui_MainWindow(object):
     self.port.setScaledContents(False)
     self.port.setWordWrap(False)
     self.port.setObjectName("port")
+    self.port_2 = QtWidgets.QLabel(self.info)
+    self.port_2.setGeometry(QtCore.QRect(70, 170, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.port_2.setFont(font)
+    self.port_2.setScaledContents(False)
+    self.port_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.port_2.setWordWrap(False)
+    self.port_2.setObjectName("port_2")
+    self.gamemode_2 = QtWidgets.QLabel(self.info)
+    self.gamemode_2.setGeometry(QtCore.QRect(70, 80, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.gamemode_2.setFont(font)
+    self.gamemode_2.setScaledContents(False)
+    self.gamemode_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.gamemode_2.setWordWrap(False)
+    self.gamemode_2.setObjectName("gamemode_2")
+    self.difficulty_2 = QtWidgets.QLabel(self.info)
+    self.difficulty_2.setGeometry(QtCore.QRect(70, 110, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.difficulty_2.setFont(font)
+    self.difficulty_2.setScaledContents(False)
+    self.difficulty_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.difficulty_2.setWordWrap(False)
+    self.difficulty_2.setObjectName("difficulty_2")
+    self.version_2 = QtWidgets.QLabel(self.info)
+    self.version_2.setGeometry(QtCore.QRect(70, 50, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.version_2.setFont(font)
+    self.version_2.setScaledContents(False)
+    self.version_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.version_2.setWordWrap(False)
+    self.version_2.setObjectName("version_2")
+    self.state_2 = QtWidgets.QLabel(self.info)
+    self.state_2.setGeometry(QtCore.QRect(70, 20, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.state_2.setFont(font)
+    self.state_2.setScaledContents(False)
+    self.state_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.state_2.setObjectName("state_2")
+    self.levelname_2 = QtWidgets.QLabel(self.info)
+    self.levelname_2.setGeometry(QtCore.QRect(70, 140, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.levelname_2.setFont(font)
+    self.levelname_2.setScaledContents(False)
+    self.levelname_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.levelname_2.setWordWrap(False)
+    self.levelname_2.setObjectName("levelname_2")
+    self.cpu = QtWidgets.QLabel(self.info)
+    self.cpu.setGeometry(QtCore.QRect(12, 200, 71, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.cpu.setFont(font)
+    self.cpu.setScaledContents(False)
+    self.cpu.setWordWrap(False)
+    self.cpu.setObjectName("cpu")
+    self.cpu_2 = QtWidgets.QLabel(self.info)
+    self.cpu_2.setGeometry(QtCore.QRect(70, 200, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.cpu_2.setFont(font)
+    self.cpu_2.setScaledContents(False)
+    self.cpu_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.cpu_2.setWordWrap(False)
+    self.cpu_2.setObjectName("cpu_2")
+    self.ram = QtWidgets.QLabel(self.info)
+    self.ram.setGeometry(QtCore.QRect(70, 230, 125, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.ram.setFont(font)
+    self.ram.setScaledContents(False)
+    self.ram.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.ram.setWordWrap(False)
+    self.ram.setObjectName("ram")
+    self.ram_2 = QtWidgets.QLabel(self.info)
+    self.ram_2.setGeometry(QtCore.QRect(12, 230, 71, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.ram_2.setFont(font)
+    self.ram_2.setScaledContents(False)
+    self.ram_2.setWordWrap(False)
+    self.ram_2.setObjectName("ram_2")
     self.tabWidget.addTab(self.panel, "")
+    self.regular = QtWidgets.QWidget()
+    self.regular.setObjectName("regular")
+    self.tabWidget.addTab(self.regular, "")
     self.setting = QtWidgets.QWidget()
     self.setting.setObjectName("setting")
+    self.filepath = QtWidgets.QPlainTextEdit(self.setting)
+    self.filepath.setEnabled(False)
+    self.filepath.setGeometry(QtCore.QRect(20, 40, 681, 30))
+    self.filepath.setReadOnly(True)
+    self.filepath.setObjectName("filepath")
+    self.selectfile = QtWidgets.QPushButton(self.setting)
+    self.selectfile.setGeometry(QtCore.QRect(719, 39, 61, 32))
+    self.selectfile.setObjectName("selectfile")
+    self.file = QtWidgets.QLabel(self.setting)
+    self.file.setGeometry(QtCore.QRect(20, 20, 191, 16))
+    self.file.setObjectName("file")
     self.tabWidget.addTab(self.setting, "")
-    self.statusbar = QtWidgets.QStatusBar(MainWindow)
-    self.statusbar.setObjectName("statusbar")
-
+    self.about = QtWidgets.QWidget()
+    self.about.setObjectName("about")
+    self.tabWidget.addTab(self.about, "")
     self.retranslateUi(MainWindow)
+    self.tabWidget.setCurrentIndex(0)
     QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+
+    
     ############################################
     global consolePath
     consolePath="file:///"+str(consolePath).replace('\\',"/")
@@ -151,7 +265,7 @@ class Ui_MainWindow(object):
     channel.registerObject("obj", factorial)
     self.console.page().setWebChannel(channel)
 
-    
+
     self.input.setDisabled(True)
     self.start.setDisabled(False)
     self.restart.setDisabled(True)
@@ -167,12 +281,12 @@ class Ui_MainWindow(object):
       "stop":self.stop,
       "restart":self.restart,
       "forcestop":self.forcestop,
-      "state":self.state,
-      "version":self.version,
-      "gamemode":self.gamemode,
-      "difficulty":self.difficulty,
-      "levelname":self.levelname,
-      "port":self.port
+      "state":self.state_2,
+      "version":self.version_2,
+      "gamemode":self.gamemode_2,
+      "difficulty":self.difficulty_2,
+      "levelname":self.levelname_2,
+      "port":self.port_2
       })
 
 
@@ -189,12 +303,26 @@ class Ui_MainWindow(object):
     self.info.setTitle(_translate("MainWindow", "服务器信息"))
     self.state.setText(_translate("MainWindow", "状态："))
     self.version.setText(_translate("MainWindow", "版本："))
-    self.gamemode.setText(_translate("MainWindow", "模式："))
-    self.difficulty.setText(_translate("MainWindow", "难度："))
+    self.gamemode.setText(_translate("MainWindow", "游戏模式："))
+    self.difficulty.setText(_translate("MainWindow", "游戏难度："))
     self.levelname.setText(_translate("MainWindow", "存档名称："))
     self.port.setText(_translate("MainWindow", "端口："))
+    self.port_2.setText(_translate("MainWindow", "- / -"))
+    self.gamemode_2.setText(_translate("MainWindow", "-"))
+    self.difficulty_2.setText(_translate("MainWindow", "-"))
+    self.version_2.setText(_translate("MainWindow", "-"))
+    self.state_2.setText(_translate("MainWindow", "未启动"))
+    self.levelname_2.setText(_translate("MainWindow", "-"))
+    self.cpu.setText(_translate("MainWindow", "CPU使用率："))
+    self.cpu_2.setText(_translate("MainWindow", "114514%"))
+    self.ram.setText(_translate("MainWindow", "1919810%"))
+    self.ram_2.setText(_translate("MainWindow", "内存使用率："))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.panel), _translate("MainWindow", "控制面板"))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.regular), _translate("MainWindow", "正则"))
+    self.selectfile.setText(_translate("MainWindow", "选择文件"))
+    self.file.setText(_translate("MainWindow", "启动路径（推荐使用.exe或.bat）"))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.setting), _translate("MainWindow", "设置"))
+    self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("MainWindow", "关于"))
 
   def transferCommand(self):
     text=self.input.text()
@@ -246,36 +374,70 @@ def server(path):
     encoding="UTF-8"
     )
   logQueue.put("#cls")
-  logQueue.put("[<span class='dylan'>Dylan</span>]服务器启动中...")
-  stateData={}
+  logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
   started=0
+  line=0
   while state==1:
+    line+=1
     try:
       log=serverProcess.stdout.readline()
     except:
       state=0
     if log!=None:
-      if started==0:
-        if log.find("version")>0 or log.find("Version")>0:
-          version=re.sub("^.+?version|Version(.?)$",r"\1",log)[:20]
-          stateData["version"]=version
-          pass
       log=outputRecognition(log)
-      if len(log)>200:
-        log=log[:200]+"...[剩余{}字符未显示]".format(len(log)-200)# 防止渲染出错
       if not re.search('^[\n\s\r]+?$',log) and log!="":
-        if re.search("Server\sstarted\.$",log) and started==0:
-          Ui_MainWindow.changeState(None,stateData)
+        if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
+          forms["version"].setText(version[:10])
+          forms["gamemode"].setText(gamemode)
+          forms["difficulty"].setText(difficulty)
+          forms["state"].setText("已启动")
+          forms["levelname"].setText(levelname[:20])
+          forms["port"].setText(ipv4+" /"+ipv6)
           started=1
+          print(serverProcess.pid)
+        if started==0:
+          if log.find("Version")>0:
+            version=re.sub("^(.+?)(version|Version)[:\s](.+?)$",r"\3",log)
+          elif log.find("Game mode")>0 :
+            if log.find("Survival")>0:
+              gamemode="生存"
+            elif log.find("Creative")>0:
+              gamemode="创造"
+            else:
+              gamemode="冒险"
+          elif log.find("Difficulty")>0:
+            if log.find("PEACEFUL")>0:
+              difficulty="和平"
+            elif log.find("EASY")>0:
+              difficulty="简单"
+            elif log.find("NORMAL")>0:
+              difficulty="普通"
+            else:
+              difficulty="困难"
+          elif log.find("Level Name")>0:
+            levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log)
+          elif log.find("IPv4")>0:
+            ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
+          elif log.find("IPv6")>0:
+            ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
+          forms["state"].setText("启动中")
         if not logQueue.full():
+          log=escape(log)
+          log=colorLog(log)
           logQueue.put(log)
         # print(log.replace("\n",""))
 
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
       state=0
       logQueue.put("--------------------")
-      logQueue.put(("[<span class='dylan'>Dylan</span>]进程已退出"))
+      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]进程已退出"))
       time.sleep(0.05)
+      forms["port"].setText("- / -")
+      forms["levelname"].setText("-")
+      forms["difficulty"].setText("-")
+      forms["gamemode"].setText("-")
+      forms["state"].setText("-")
+      forms["version"].setText("未启动")
       forms["input"].setDisabled(True)
       forms["start"].setDisabled(False)
       forms["restart"].setDisabled(True)
@@ -289,6 +451,8 @@ def server(path):
     except:
       serverProcess.stdin.write("stop\n")
       break
+    if line>32000:
+      logQueue.put("#cls")
 
 def outputCommand(command):
   global serverProcess
@@ -298,25 +462,31 @@ def outputCommand(command):
 
 
 def outputRecognition(log):
-  log=re.sub("^>.+\dm","",log)# 处理LL加载器下的输入前缀和颜色代码
-  log=re.sub("\[\d+?m","",log)
-  log=re.sub('[]',"",log)
+  log=re.sub("\[.+?m","",log)# 处理LL加载器下的输入前缀和颜色代码
+  log=re.sub("","",log)
   log=re.sub('^> ',"",log)
   log=re.sub('^>',"",log)
+  log=re.sub('\s$',"",log)
+  return log
+
+def escape(log):
   log=log.replace('/',"&#47;")# 转义防炸
   log=log.replace('"',"&quot;")
   log=log.replace(',',"&#44;")
   log=log.replace(':',"&#58;")
   log=log.replace("<","&lt;")
   log=log.replace(">","&gt;")
+  return log
 
-  log=re.sub("(INFO|info|Info)[\s]?\]",r"<span class='info'>\1</span>]",log)
-  log=re.sub("(WARN|warn|Warn)[\s]?\]",r"<span class='warn'><b>\1</b></span>]",log)
-  log=re.sub("(ERROR|error|Error)[\s]?\]",r"<span class='error'><b>\1</b></span>]",log)
-  log=re.sub("(DEBUG|debug|Debug)[\s]?\]",r"<span class='debug'>\1</span>]",log)
-  log=re.sub("([0-9A-Za-z\.-]+?dll)",r"<span class='file'>\1</span>",log)
-  log=re.sub("([0-9A-Za-z\.-]+?js)",r"<span class='file'>\1</span>",log)
-  log=re.sub("([0-9A-Za-z\.-]+?py)",r"<span class='file'>\1</span>",log)
+def colorLog(log):
+  log=re.sub("\s(INFO|info|Info)",r"<span style='color:#20B2AA'> \1</span>",log) #info
+  log=re.sub("\s(WARN|warn|Warn)",r"<span style='color:#aa7a12'><b> \1</b></span>",log) #warn
+  log=re.sub("\s(ERROR|error|Error)",r"<span style='color:#aa0000'><b> \1</b></span>",log) #error
+  log=re.sub("\s(DEBUG|debug|Debug)",r"<span style='color:#865FC5'> \1</span>",log) #debug
+  log=re.sub("\[(SERVER|server|Server)\]",r"[<span style='color:#4E8F46'>\1</span>]",log) #server
+  log=re.sub("\[(LiteLoader|LLMoney)\]",r"[<span style='color:#4682B4'>\1</span>]",log)  #ll
+  log=re.sub("\[(Chakra)\]",r"[<span style='color:#5555FF'>\1</span>]",log)  #ck
+  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,3}))",r"<span style='color:#688292'>\1</span>",log)#{files}
   return log
 
 def startServer():
@@ -354,12 +524,12 @@ def gui():
 if __name__=="__main__":
   channel = QWebChannel()
   factorial = Factorial()
-  VERSION="Alpha 1.3.20220215_1"
+  VERSION="Alpha 1.4.20220215"
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
-  print("Run at",selfPath)
+  print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
-  formQueue=queue.Queue(maxsize=10)
+  formQueue=queue.Queue(maxsize=2)
   commandQueue=queue.Queue(maxsize=100)
   logQueue=queue.Queue(maxsize=10000)
   state=0
