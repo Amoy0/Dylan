@@ -5,8 +5,8 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime
 
+import PyQt5
 from PyQt5 import QtCore, QtGui, QtWebEngineWidgets, QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
 from PyQt5.QtGui import QIcon, QTextCursor
@@ -269,7 +269,7 @@ def server(path):
           started=1
         if not logQueue.full():
           logQueue.put(log)
-        print(log.replace("\n",""))
+        # print(log.replace("\n",""))
 
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
       state=0
@@ -328,13 +328,14 @@ def startServer():
       _state=1
       server(setting["path"])
       _state=0
-    try:
-      if not MainWindow.isVisible():
+    if state==1 or _state==1:
+      try:
+        if not MainWindow.isVisible():
+          serverProcess.stdin.write("stop\n")
+          break
+      except:
         serverProcess.stdin.write("stop\n")
         break
-    except:
-      serverProcess.stdin.write("stop\n")
-      break
     time.sleep(1)
   exit()
 
@@ -353,8 +354,9 @@ def gui():
 if __name__=="__main__":
   channel = QWebChannel()
   factorial = Factorial()
-  VERSION="Alpha 1.3.20220215"
-  selfPath=os.path.split(os.path.realpath(__file__))[0]
+  VERSION="Alpha 1.3.20220215_1"
+  selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
+  print("Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
   formQueue=queue.Queue(maxsize=10)
@@ -371,7 +373,8 @@ if __name__=="__main__":
         setting[strs[0]] = strs[1]
   else:
     print("setting.ini文件不存在")
-    exit(os.system("pause"))
+  if not os.path.exists(os.path.join(selfPath,"console.html")):
+    print("console.html文件不存在")
   serverThread=threading.Thread(target=startServer)
   serverThread.daemon=1
   serverThread.start()
