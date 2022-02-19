@@ -10,8 +10,9 @@
       margin: 0;
       border: 1px solid #787878;
       overflow: hidden;
-      font-family: 宋体;
-      font-size: 13px;
+      font-family: 新宋体,宋体;
+      font-size: 14px;
+      line-height: 110%;
     }
     #main{
       overflow: auto;
@@ -22,29 +23,10 @@
     #main > *{
       margin: 0px 5px;
     }
-    /*颜色配置*/
-    .dylan{
-      color:#007acc
-    }
-    .info{
-      color:#00aa00
-    }
-    .warn{
-      color:#aa7a12
-    }
-    .error{
-      color:#aa0000
-    }
-    .debug{
-      color:#926fcb
-    }
-    .file{
-      color:#688292
-    }
   </style>
   <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
   <link rel="shortcut icon" href="./ico.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
   <script>
     /****************************************************************************
     **
@@ -517,7 +499,8 @@
     /*
     https://www.cnblogs.com/leokale-zz/p/13141751.html
     */
-
+    line=0
+    removed=1
     document.addEventListener("DOMContentLoaded", function () {
       new QWebChannel(qt.webChannelTransport, function (channel) {
         window.obj = channel.objects.obj;
@@ -525,12 +508,21 @@
     });
     function onFactorial() {
       if (window.obj) {
-        window.obj.factorial("",printlog);}}
+        window.obj.factorial("",printlog);
+        }}
     function printlog(text){
       // alert(text)
       if(text!="None"){
+        line+=1
         $("#main").append("<div>"+text+"</div>");
-        $("#main").animate({scrollTop:$("#main")[0].scrollHeight},'100');
+        document.querySelector("#main div:last-child").scrollIntoView({
+          block: 'end',
+          behavior: 'smooth' 
+        });
+        if(line>1000){
+            $("#main div:first-child").remove();
+            line-=1;
+        }// 自动清除控制台旧输出
         if(text=="#cls"){
           $("#main").html("");
         }
@@ -541,7 +533,12 @@
 </head>
 <body>
   <div id="main">
-    
+      <!--控制台区域-->
+      
   </div>
+  <!-- <div id="warn" style="border: 2px solid orange;background:#ffdead;padding: 20px;margin-top: 20px;font-size: 1.5rem;">
+    请使用Dylan.exe以启动控制台
+  </div>
+  <button id="test" onclick="printlog(114514)">test</button> -->
 </body>
 </html>

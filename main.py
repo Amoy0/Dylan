@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 
+import psutil
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWebEngineWidgets, QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
@@ -28,11 +29,19 @@ class Ui_MainWindow(object):
     self.centralwidget.setObjectName("centralwidget")
     self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
     self.tabWidget.setGeometry(QtCore.QRect(0, 0, 800, 450))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.tabWidget.setFont(font)
     self.tabWidget.setObjectName("tabWidget")
     self.panel = QtWidgets.QWidget()
     self.panel.setObjectName("panel")
     self.controls = QtWidgets.QGroupBox(self.panel)
     self.controls.setGeometry(QtCore.QRect(4, 310, 221, 91))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.controls.setFont(font)
     self.controls.setObjectName("controls")
     self.start = QtWidgets.QPushButton(self.controls)
     self.start.setGeometry(QtCore.QRect(5, 15, 100, 30))
@@ -55,9 +64,6 @@ class Ui_MainWindow(object):
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
-    font.setBold(False)
-    font.setItalic(False)
-    font.setWeight(50)
     self.forcestop.setFont(font)
     self.forcestop.setObjectName("forcestop")
     self.restart = QtWidgets.QPushButton(self.controls)
@@ -70,15 +76,31 @@ class Ui_MainWindow(object):
     self.restart.setObjectName("restart")
     self.consolegroup = QtWidgets.QGroupBox(self.panel)
     self.consolegroup.setGeometry(QtCore.QRect(230, 10, 561, 391))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.consolegroup.setFont(font)
     self.consolegroup.setObjectName("consolegroup")
     self.input = QtWidgets.QLineEdit(self.consolegroup)
     self.input.setGeometry(QtCore.QRect(10, 360, 541, 21))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.input.setFont(font)
     self.input.setObjectName("input")
     self.console = QtWebEngineWidgets.QWebEngineView(self.consolegroup)
     self.console.setGeometry(QtCore.QRect(9, 19, 541, 331))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.console.setFont(font)
     self.console.setObjectName("console")
     self.info = QtWidgets.QGroupBox(self.panel)
     self.info.setGeometry(QtCore.QRect(9, 9, 211, 271))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.info.setFont(font)
     self.info.setObjectName("info")
     self.state = QtWidgets.QLabel(self.info)
     self.state.setGeometry(QtCore.QRect(11, 20, 60, 31))
@@ -212,87 +234,71 @@ class Ui_MainWindow(object):
     self.cpu_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
     self.cpu_2.setWordWrap(False)
     self.cpu_2.setObjectName("cpu_2")
-    self.ram = QtWidgets.QLabel(self.info)
-    self.ram.setGeometry(QtCore.QRect(70, 230, 125, 31))
-    font = QtGui.QFont()
-    font.setFamily("宋体")
-    font.setPointSize(10)
-    self.ram.setFont(font)
-    self.ram.setScaledContents(False)
-    self.ram.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.ram.setWordWrap(False)
-    self.ram.setObjectName("ram")
     self.ram_2 = QtWidgets.QLabel(self.info)
-    self.ram_2.setGeometry(QtCore.QRect(12, 230, 71, 31))
+    self.ram_2.setGeometry(QtCore.QRect(70, 230, 125, 31))
     font = QtGui.QFont()
     font.setFamily("宋体")
     font.setPointSize(10)
     self.ram_2.setFont(font)
     self.ram_2.setScaledContents(False)
+    self.ram_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
     self.ram_2.setWordWrap(False)
     self.ram_2.setObjectName("ram_2")
+    self.ram = QtWidgets.QLabel(self.info)
+    self.ram.setGeometry(QtCore.QRect(12, 230, 71, 31))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.ram.setFont(font)
+    self.ram.setScaledContents(False)
+    self.ram.setWordWrap(False)
+    self.ram.setObjectName("ram")
     self.tabWidget.addTab(self.panel, "")
     self.regular = QtWidgets.QWidget()
     self.regular.setObjectName("regular")
     self.tabWidget.addTab(self.regular, "")
     self.setting = QtWidgets.QWidget()
     self.setting.setObjectName("setting")
-    self.filepath = QtWidgets.QPlainTextEdit(self.setting)
-    self.filepath.setEnabled(False)
-    self.filepath.setGeometry(QtCore.QRect(20, 40, 681, 30))
+    self.groupBox = QtWidgets.QGroupBox(self.setting)
+    self.groupBox.setGeometry(QtCore.QRect(10, 10, 771, 121))
+    self.groupBox.setObjectName("groupBox")
+    self.file = QtWidgets.QLabel(self.groupBox)
+    self.file.setGeometry(QtCore.QRect(10, 20, 201, 16))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.file.setFont(font)
+    self.file.setObjectName("file")
+    self.filepath = QtWidgets.QLineEdit(self.groupBox)
+    self.filepath.setGeometry(QtCore.QRect(10, 40, 661, 21))
+    font = QtGui.QFont()
+    font.setFamily("宋体")
+    font.setPointSize(10)
+    self.filepath.setFont(font)
     self.filepath.setReadOnly(True)
     self.filepath.setObjectName("filepath")
-    self.selectfile = QtWidgets.QPushButton(self.setting)
-    self.selectfile.setGeometry(QtCore.QRect(719, 39, 61, 32))
+    self.selectfile = QtWidgets.QPushButton(self.groupBox)
+    self.selectfile.setGeometry(QtCore.QRect(680, 39, 81, 23))
     self.selectfile.setObjectName("selectfile")
-    self.file = QtWidgets.QLabel(self.setting)
-    self.file.setGeometry(QtCore.QRect(20, 20, 191, 16))
-    self.file.setObjectName("file")
+    self.enableColorfulLog = QtWidgets.QCheckBox(self.groupBox)
+    self.enableColorfulLog.setGeometry(QtCore.QRect(10, 70, 241, 16))
+    self.enableColorfulLog.setChecked(True)
+    self.enableColorfulLog.setObjectName("enableColorfulLog")
+    self.compatibilityMode = QtWidgets.QCheckBox(self.groupBox)
+    self.compatibilityMode.setGeometry(QtCore.QRect(10, 90, 491, 16))
+    self.compatibilityMode.setObjectName("compatibilityMode")
     self.tabWidget.addTab(self.setting, "")
     self.about = QtWidgets.QWidget()
     self.about.setObjectName("about")
     self.tabWidget.addTab(self.about, "")
+
     self.retranslateUi(MainWindow)
     self.tabWidget.setCurrentIndex(0)
     QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-
-    
-    ############################################
-    global consolePath
-    consolePath="file:///"+str(consolePath).replace('\\',"/")
-    self.console.load(QUrl(consolePath))
-    channel.registerObject("obj", factorial)
-    self.console.page().setWebChannel(channel)
-
-
-    self.input.setDisabled(True)
-    self.start.setDisabled(False)
-    self.restart.setDisabled(True)
-    self.stop.setDisabled(True)
-    self.forcestop.setDisabled(True)
-    self.start.clicked.connect(lambda: self.control(1))
-    self.stop.clicked.connect(lambda: self.control(2))
-    self.input.returnPressed.connect(self.transferCommand)
-    formQueue.put(item={
-      "console":self.console,
-      "input":self.input,
-      "start":self.start,
-      "stop":self.stop,
-      "restart":self.restart,
-      "forcestop":self.forcestop,
-      "state":self.state_2,
-      "version":self.version_2,
-      "gamemode":self.gamemode_2,
-      "difficulty":self.difficulty_2,
-      "levelname":self.levelname_2,
-      "port":self.port_2
-      })
-
-
   def retranslateUi(self, MainWindow):
     _translate = QtCore.QCoreApplication.translate
-    MainWindow.setWindowTitle(_translate("MainWindow", "Dylan "+VERSION))
+    MainWindow.setWindowTitle(_translate("MainWindow", "Dylan"))
     self.controls.setTitle(_translate("MainWindow", "控制"))
     self.start.setText(_translate("MainWindow", "▶ 启动"))
     self.stop.setText(_translate("MainWindow", "■ 停止"))
@@ -314,15 +320,53 @@ class Ui_MainWindow(object):
     self.state_2.setText(_translate("MainWindow", "未启动"))
     self.levelname_2.setText(_translate("MainWindow", "-"))
     self.cpu.setText(_translate("MainWindow", "CPU使用率："))
-    self.cpu_2.setText(_translate("MainWindow", "114514%"))
-    self.ram.setText(_translate("MainWindow", "1919810%"))
-    self.ram_2.setText(_translate("MainWindow", "内存使用率："))
+    self.cpu_2.setText(_translate("MainWindow", "-%"))
+    self.ram_2.setText(_translate("MainWindow", "-%"))
+    self.ram.setText(_translate("MainWindow", "内存使用率："))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.panel), _translate("MainWindow", "控制面板"))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.regular), _translate("MainWindow", "正则"))
-    self.selectfile.setText(_translate("MainWindow", "选择文件"))
+    self.groupBox.setTitle(_translate("MainWindow", "启动设置"))
     self.file.setText(_translate("MainWindow", "启动路径（推荐使用.exe或.bat）"))
+    self.selectfile.setText(_translate("MainWindow", "选择文件"))
+    self.enableColorfulLog.setText(_translate("MainWindow", "彩色日志输出（部分语法高亮）"))
+    self.compatibilityMode.setText(_translate("MainWindow", "兼容模式（使用嵌套批处理文件开服） 若出现服务器启动失败可尝试开启此选项）"))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.setting), _translate("MainWindow", "设置"))
     self.tabWidget.setTabText(self.tabWidget.indexOf(self.about), _translate("MainWindow", "关于"))
+    self.customize()
+
+  def customize(self):
+    global consolePath
+    self.filepath.setText(setting["path"])
+    consolePath="file:///"+str(consolePath).replace('\\',"/")
+    self.console.load(QUrl(consolePath))
+    channel.registerObject("obj", factorial)
+    self.console.page().setWebChannel(channel)
+    self.input.setDisabled(True)
+    self.start.setDisabled(False)
+    self.restart.setDisabled(True)
+    self.stop.setDisabled(True)
+    self.forcestop.setDisabled(True)
+    self.start.clicked.connect(lambda: self.control(1))
+    self.stop.clicked.connect(lambda: self.control(2))
+    self.input.returnPressed.connect(self.transferCommand)
+    formQueue.put(item={
+      "console":self.console,
+      "input":self.input,
+      "start":self.start,
+      "stop":self.stop,
+      "restart":self.restart,
+      "forcestop":self.forcestop,
+      "state":self.state_2,
+      "version":self.version_2,
+      "gamemode":self.gamemode_2,
+      "difficulty":self.difficulty_2,
+      "levelname":self.levelname_2,
+      "port":self.port_2,
+      "ram":self.ram_2,
+      "cpu":self.cpu_2,
+      "enableColorfulLog":self.enableColorfulLog,
+      "compatibilityMode":self.compatibilityMode
+      })
 
   def transferCommand(self):
     text=self.input.text()
@@ -334,7 +378,6 @@ class Ui_MainWindow(object):
 
     if type==1 and state!=1:
       state=1
-      time.sleep(1)
 
       self.start.setDisabled(True)
       self.stop.setDisabled(False)
@@ -377,6 +420,8 @@ def server(path):
   logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
   started=0
   line=0
+  print(serverProcess.pid)
+
   while state==1:
     line+=1
     try:
@@ -394,10 +439,9 @@ def server(path):
           forms["levelname"].setText(levelname[:20])
           forms["port"].setText(ipv4+" /"+ipv6)
           started=1
-          print(serverProcess.pid)
         if started==0:
           if log.find("Version")>0:
-            version=re.sub("^(.+?)(version|Version)[:\s](.+?)$",r"\3",log)
+            version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log)
           elif log.find("Game mode")>0 :
             if log.find("Survival")>0:
               gamemode="生存"
@@ -423,7 +467,8 @@ def server(path):
           forms["state"].setText("启动中")
         if not logQueue.full():
           log=escape(log)
-          log=colorLog(log)
+          if forms["enableColorfulLog"].isChecked():
+            log=colorLog(log)
           logQueue.put(log)
         # print(log.replace("\n",""))
 
@@ -436,8 +481,8 @@ def server(path):
       forms["levelname"].setText("-")
       forms["difficulty"].setText("-")
       forms["gamemode"].setText("-")
-      forms["state"].setText("-")
-      forms["version"].setText("未启动")
+      forms["state"].setText("未启动")
+      forms["version"].setText("-")
       forms["input"].setDisabled(True)
       forms["start"].setDisabled(False)
       forms["restart"].setDisabled(True)
@@ -457,7 +502,10 @@ def server(path):
 def outputCommand(command):
   global serverProcess
   print(command)
-  serverProcess.stdin.write(command+"\n")
+  try:
+    serverProcess.stdin.write(command+"\n")
+  except:
+    pass
   logQueue.put(">"+command)
 
 
@@ -479,14 +527,13 @@ def escape(log):
   return log
 
 def colorLog(log):
-  log=re.sub("\s(INFO|info|Info)",r"<span style='color:#20B2AA'> \1</span>",log) #info
-  log=re.sub("\s(WARN|warn|Warn)",r"<span style='color:#aa7a12'><b> \1</b></span>",log) #warn
-  log=re.sub("\s(ERROR|error|Error)",r"<span style='color:#aa0000'><b> \1</b></span>",log) #error
-  log=re.sub("\s(DEBUG|debug|Debug)",r"<span style='color:#865FC5'> \1</span>",log) #debug
-  log=re.sub("\[(SERVER|server|Server)\]",r"[<span style='color:#4E8F46'>\1</span>]",log) #server
-  log=re.sub("\[(LiteLoader|LLMoney)\]",r"[<span style='color:#4682B4'>\1</span>]",log)  #ll
-  log=re.sub("\[(Chakra)\]",r"[<span style='color:#5555FF'>\1</span>]",log)  #ck
-  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,3}))",r"<span style='color:#688292'>\1</span>",log)#{files}
+  log=re.sub("\s(INFO|info|Info)",r"<span id='info'> \1</span>",log) #info
+  log=re.sub("\s(WARN|warn|Warn)",r"<span id='warn'><b> \1</b></span>",log) #warn
+  log=re.sub("\s(ERROR|error|Error)",r"<span id='error'><b> \1</b></span>",log) #error
+  log=re.sub("\s(DEBUG|debug|Debug)",r"<span id='debug'> \1</span>",log) #debug
+  log=re.sub("\[(SERVER|server|Server)\]",r"[<span id='server'>\1</span>]",log) #server
+  log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span id='\1'>\1</span>]",log)  #ck
+  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,3}))",r"<span id='file'>\1</span>",log)#{files}
   return log
 
 def startServer():
@@ -509,6 +556,24 @@ def startServer():
     time.sleep(1)
   exit()
 
+def statusMonitoring():
+  global serverProcess,forms
+  while True:
+    time.sleep(5)
+    while state==1:
+      time.sleep(1)
+      try:
+        if not MainWindow.isVisible():
+          break
+      except:
+        break
+      forms["cpu"].setText(str(psutil.cpu_percent())+"%")
+      forms["ram"].setText(str(psutil.virtual_memory()[2])+"%")
+    if forms!="":
+      forms["cpu"].setText("-%")
+      forms["ram"].setText("-%")
+      
+
 
 def gui():
   global MainWindow
@@ -524,7 +589,7 @@ def gui():
 if __name__=="__main__":
   channel = QWebChannel()
   factorial = Factorial()
-  VERSION="Alpha 1.4.20220215"
+  VERSION="Alpha 1.5.20220219"
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
   print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
@@ -548,4 +613,7 @@ if __name__=="__main__":
   serverThread=threading.Thread(target=startServer)
   serverThread.daemon=1
   serverThread.start()
+  monitoringThread=threading.Thread(target=statusMonitoring)
+  monitoringThread.daemon=1
+  monitoringThread.start()
   gui()
