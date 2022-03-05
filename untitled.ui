@@ -55,13 +55,13 @@
      <attribute name="title">
       <string>控制面板</string>
      </attribute>
-     <widget class="QGroupBox" name="controls">
+     <widget class="QGroupBox" name="Panel_controls">
       <property name="geometry">
        <rect>
         <x>4</x>
-        <y>310</y>
+        <y>300</y>
         <width>221</width>
-        <height>91</height>
+        <height>101</height>
        </rect>
       </property>
       <property name="font">
@@ -73,11 +73,11 @@
       <property name="title">
        <string>控制</string>
       </property>
-      <widget class="QPushButton" name="start">
+      <widget class="QPushButton" name="Panel_start">
        <property name="geometry">
         <rect>
          <x>5</x>
-         <y>15</y>
+         <y>25</y>
          <width>100</width>
          <height>30</height>
         </rect>
@@ -92,14 +92,14 @@
         <string>▶ 启动</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="stop">
+      <widget class="QPushButton" name="Panel_stop">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>115</x>
-         <y>15</y>
+         <y>25</y>
          <width>100</width>
          <height>30</height>
         </rect>
@@ -114,14 +114,14 @@
         <string>■ 停止</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="forcestop">
+      <widget class="QPushButton" name="Panel_forcestop">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>115</x>
-         <y>50</y>
+         <y>60</y>
          <width>100</width>
          <height>30</height>
         </rect>
@@ -136,14 +136,14 @@
         <string>强制关闭</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="restart">
+      <widget class="QPushButton" name="Panel_restart">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>5</x>
-         <y>50</y>
+         <y>60</y>
          <width>100</width>
          <height>30</height>
         </rect>
@@ -159,7 +159,7 @@
        </property>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="consolegroup">
+     <widget class="QGroupBox" name="Panel_consolegroup">
       <property name="geometry">
        <rect>
         <x>230</x>
@@ -177,7 +177,7 @@
       <property name="title">
        <string>控制台</string>
       </property>
-      <widget class="QLineEdit" name="input">
+      <widget class="QLineEdit" name="Panel_input">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -196,13 +196,13 @@
         <string>&gt; 在此输入指令...</string>
        </property>
       </widget>
-      <widget class="QWebEngineView" name="console" native="true">
+      <widget class="QWebEngineView" name="Panel_console" native="true">
        <property name="geometry">
         <rect>
          <x>9</x>
-         <y>19</y>
+         <y>29</y>
          <width>541</width>
-         <height>331</height>
+         <height>321</height>
         </rect>
        </property>
        <property name="font">
@@ -213,7 +213,7 @@
        </property>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="info">
+     <widget class="QGroupBox" name="Panel_info">
       <property name="geometry">
        <rect>
         <x>9</x>
@@ -231,7 +231,7 @@
       <property name="title">
        <string>服务器信息</string>
       </property>
-      <widget class="QLabel" name="state">
+      <widget class="QLabel" name="Panel_state">
        <property name="geometry">
         <rect>
          <x>11</x>
@@ -256,7 +256,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="version">
+      <widget class="QLabel" name="Panel_version">
        <property name="geometry">
         <rect>
          <x>11</x>
@@ -281,7 +281,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="gamemode">
+      <widget class="QLabel" name="Panel_gamemode">
        <property name="geometry">
         <rect>
          <x>11</x>
@@ -306,7 +306,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="difficulty">
+      <widget class="QLabel" name="Panel_difficulty">
        <property name="geometry">
         <rect>
          <x>12</x>
@@ -331,7 +331,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="levelname">
+      <widget class="QLabel" name="Panel_levelname">
        <property name="geometry">
         <rect>
          <x>12</x>
@@ -356,7 +356,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="port">
+      <widget class="QLabel" name="Panel_port">
        <property name="geometry">
         <rect>
          <x>12</x>
@@ -381,7 +381,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="port_2">
+      <widget class="QLabel" name="Panel_port_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -409,7 +409,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="gamemode_2">
+      <widget class="QLabel" name="Panel_gamemode_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -437,7 +437,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="difficulty_2">
+      <widget class="QLabel" name="Panel_difficulty_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -465,7 +465,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="version_2">
+      <widget class="QLabel" name="Panel_version_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -493,7 +493,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="state_2">
+      <widget class="QLabel" name="Panel_state_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -518,7 +518,7 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QLabel" name="levelname_2">
+      <widget class="QLabel" name="Panel_levelname_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -546,7 +546,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="cpu">
+      <widget class="QLabel" name="Panel_cpu">
        <property name="geometry">
         <rect>
          <x>12</x>
@@ -571,7 +571,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="cpu_2">
+      <widget class="QLabel" name="Panel_cpu_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -599,7 +599,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="ram_2">
+      <widget class="QLabel" name="Panel_ram_2">
        <property name="geometry">
         <rect>
          <x>70</x>
@@ -627,7 +627,7 @@
         <bool>false</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="ram">
+      <widget class="QLabel" name="Panel_ram">
        <property name="geometry">
         <rect>
          <x>12</x>
@@ -707,17 +707,17 @@
       </column>
      </widget>
     </widget>
-    <widget class="QWidget" name="cqhttp">
+    <widget class="QWidget" name="Bot">
      <attribute name="title">
-      <string>机器人</string>
+      <string>cqhttp</string>
      </attribute>
-     <widget class="QWebEngineView" name="console_2" native="true">
+     <widget class="QWebEngineView" name="CQ_console" native="true">
       <property name="geometry">
        <rect>
         <x>180</x>
-        <y>10</y>
+        <y>16</y>
         <width>601</width>
-        <height>391</height>
+        <height>384</height>
        </rect>
       </property>
       <property name="font">
@@ -727,105 +727,594 @@
        </font>
       </property>
      </widget>
+     <widget class="QGroupBox" name="CQ_states">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>151</width>
+        <height>391</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>状态</string>
+      </property>
+      <widget class="QPushButton" name="CQ_start">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>300</y>
+         <width>111</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>启动</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="CQ_stop">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>340</y>
+         <width>111</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>停止</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
     <widget class="QWidget" name="setting">
      <attribute name="title">
       <string>设置</string>
      </attribute>
-     <widget class="QGroupBox" name="groupBox">
+     <widget class="QScrollArea" name="setting_scrollArea">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>771</width>
-        <height>121</height>
+        <x>0</x>
+        <y>0</y>
+        <width>796</width>
+        <height>450</height>
        </rect>
       </property>
-      <property name="title">
-       <string>启动设置</string>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
       </property>
-      <widget class="QLabel" name="file">
+      <property name="widgetResizable">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="setting_scrollAreaWidgetContents">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>201</width>
-         <height>16</height>
+         <x>0</x>
+         <y>-240</y>
+         <width>800</width>
+         <height>680</height>
         </rect>
        </property>
-       <property name="font">
-        <font>
-         <family>宋体</family>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>启动路径</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="filepath">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>40</y>
-         <width>661</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>宋体</family>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-       <property name="placeholderText">
-        <string> 空</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="selectfile">
-       <property name="geometry">
-        <rect>
-         <x>680</x>
-         <y>39</y>
-         <width>81</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>选择文件</string>
-       </property>
-      </widget>
-      <widget class="QCheckBox" name="enableColorfulLog">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>70</y>
-         <width>241</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>彩色日志输出（部分语法高亮）</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QCheckBox" name="compatibilityMode">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>90</y>
-         <width>491</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>兼容模式（使用嵌套批处理文件开服） 若出现服务器启动失败可尝试开启此选项）</string>
-       </property>
+       <widget class="QGroupBox" name="setting_start">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>761</width>
+          <height>121</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>启动</string>
+        </property>
+        <widget class="QLabel" name="setting_file">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <family>宋体</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>启动路径</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="setting_filepath">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>641</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <family>宋体</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="setting_selectfile">
+         <property name="geometry">
+          <rect>
+           <x>670</x>
+           <y>39</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>选择文件</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_compatibilityMode">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>70</y>
+           <width>481</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>兼容启动模式（使用嵌套批处理文件开服 若出现服务器启动失败可尝试开启此选项）</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_autoRestart">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>90</y>
+           <width>161</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>异常关服自动重启</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="setting_bot">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>240</y>
+          <width>761</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Bot</string>
+        </property>
+        <widget class="QLabel" name="setting_port1">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>51</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>发送端口</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="setting_port2">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>60</y>
+           <width>51</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>接收端口</string>
+         </property>
+        </widget>
+        <widget class="QSpinBox" name="setting_sendPort">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>30</y>
+           <width>71</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="value">
+          <number>5700</number>
+         </property>
+        </widget>
+        <widget class="QSpinBox" name="setting_listenPort">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>60</y>
+           <width>71</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="value">
+          <number>8080</number>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="setting_botFilepath">
+         <property name="geometry">
+          <rect>
+           <x>180</x>
+           <y>50</y>
+           <width>481</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <family>宋体</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="setting_botSelectfile">
+         <property name="geometry">
+          <rect>
+           <x>670</x>
+           <y>50</y>
+           <width>81</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>选择文件</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="setting_botFile">
+         <property name="geometry">
+          <rect>
+           <x>180</x>
+           <y>30</y>
+           <width>71</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <family>宋体</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>启动路径</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="setting_console">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>140</y>
+          <width>761</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>控制台</string>
+        </property>
+        <widget class="QLabel" name="setting_color_style">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>141</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>彩色输出样式</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="setting_colorfulLogOut">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>50</y>
+           <width>131</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="currentIndex">
+          <number>2</number>
+         </property>
+         <item>
+          <property name="text">
+           <string>禁用</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>原彩色输出</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>预设(style.css)</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QCheckBox" name="setting_enableOutputToLog">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>30</y>
+           <width>161</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>保存到日志文件</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_enableAutoScroll">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>50</y>
+           <width>181</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>自动滚动至末尾</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="setting_msg">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>340</y>
+          <width>761</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>消息</string>
+        </property>
+        <widget class="QPlainTextEdit" name="setting_groupList">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>50</y>
+           <width>211</width>
+           <height>101</height>
+          </rect>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::PreventContextMenu</enum>
+         </property>
+        </widget>
+        <widget class="QLabel" name="setting_listenGroup">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>131</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>监听群号列表</string>
+         </property>
+        </widget>
+        <widget class="QPlainTextEdit" name="setting_permissionList">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>50</y>
+           <width>211</width>
+           <height>101</height>
+          </rect>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::PreventContextMenu</enum>
+         </property>
+        </widget>
+        <widget class="QLabel" name="setting_permission">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>30</y>
+           <width>131</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>管理权限列表</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_givePermissionToAllAdmin">
+         <property name="geometry">
+          <rect>
+           <x>520</x>
+           <y>50</y>
+           <width>201</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>赋予所有群主和管理员管理权限</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_outputMsgToLog">
+         <property name="geometry">
+          <rect>
+           <x>520</x>
+           <y>70</y>
+           <width>171</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>保存消息记录到日志</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="setting_dylan">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>520</y>
+          <width>761</width>
+          <height>131</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Dylan</string>
+        </property>
+        <widget class="QCheckBox" name="setting_enableUpdate">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>171</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>新版本更新提示</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="setting_enableAnnouncement">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>60</y>
+           <width>121</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>总是收取（推荐）</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>仅显示重要公告</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>禁用</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QLabel" name="setting_announcement">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>60</y>
+           <width>41</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>公告</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="setting_clearLogs">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>80</y>
+           <width>61</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>清空缓存</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="setting_chosenTheme">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>90</y>
+           <width>121</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>默认</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Fusion</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Fusion（深色）</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QLabel" name="setting_theme">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>90</y>
+           <width>31</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>主题</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="setting_state">
+         <property name="geometry">
+          <rect>
+           <x>210</x>
+           <y>40</y>
+           <width>61</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>统计</string>
+         </property>
+        </widget>
+       </widget>
       </widget>
      </widget>
     </widget>

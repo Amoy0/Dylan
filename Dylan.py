@@ -7,12 +7,15 @@ import sys
 import threading
 import time
 
+import requests
+from flask import Flask, request
+
 import psutil
 import PyQt5
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
-from PyQt5.QtGui import QCursor, QIcon
+from PyQt5.QtGui import QCursor, QIcon, QPalette,QColor
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -24,46 +27,129 @@ class gui(QWidget,Ui_MainWindow):
     super(gui, self).__init__(parent)
     self.setupUi(self)
     global consolePath,forms,datas
+    channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan_"+VERSION)
     self.tabWidget.setCurrentIndex(0)
-    self.enableColorfulLog.setChecked(datas["setting"]["enable_colorful_log"])
-    self.compatibilityMode.setChecked(datas["setting"]["compatibility_mode"])
-    self.filepath.setText(datas["setting"]["path"])
-    consolePath="file:///"+str(consolePath).replace('\\',"/")
-    self.console.load(QUrl(consolePath))
-    channel.registerObject("obj", factorial)
-    self.console.page().setWebChannel(channel)
-    self.input.setDisabled(True)
-    self.start.setDisabled(False)
-    self.restart.setDisabled(True)
-    self.stop.setDisabled(True)
-    self.forcestop.setDisabled(True)
+    #############
+    self.Panel_input.setDisabled(True)
+    self.Panel_start.setDisabled(False)
+    self.Panel_restart.setDisabled(True)
+    self.Panel_stop.setDisabled(True)
+    self.Panel_forcestop.setDisabled(True)
+
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
     self.loadRegular()
-    self.start.clicked.connect(lambda: self.serverControl(1))
-    self.selectfile.clicked.connect(lambda: self.selectFile())
-    self.stop.clicked.connect(lambda: self.serverControl(2))
-    self.input.returnPressed.connect(self.transferCommand)
+    self.connectFunctions()
     forms={
-      "console":self.console,
-      "input":self.input,
-      "start":self.start,
-      "stop":self.stop,
-      "restart":self.restart,
-      "forcestop":self.forcestop,
-      "state":self.state_2,
-      "version":self.version_2,
-      "gamemode":self.gamemode_2,
-      "difficulty":self.difficulty_2,
-      "levelname":self.levelname_2,
-      "port":self.port_2,
-      "ram":self.ram_2,
-      "cpu":self.cpu_2,
-      "filepath":self.filepath,
-      "enableColorfulLog":self.enableColorfulLog,
-      "compatibilityMode":self.compatibilityMode,
+      "panel":{
+        "console":self.Panel_console,
+        "input":self.Panel_input,
+        "start":self.Panel_start,
+        "stop":self.Panel_stop,
+        "restart":self.Panel_restart,
+        "forcestop":self.Panel_forcestop,
+        "state":self.Panel_state_2,
+        "version":self.Panel_version_2,
+        "gamemode":self.Panel_gamemode_2,
+        "difficulty":self.Panel_difficulty_2,
+        "levelname":self.Panel_levelname_2,
+        "port":self.Panel_port_2,
+        "ram":self.Panel_ram_2,
+        "cpu":self.Panel_cpu_2
+      },
+      "setting":{
+        "start":{
+          "filepath":self.setting_filepath,
+          "compatibilityMode":self.setting_compatibilityMode,
+          "autoRestart":self.setting_autoRestart
+        },
+        "bot":{
+          "sendPort":self.setting_sendPort,
+          "listenPort":self.setting_listenPort,
+          "botFilepath":self.setting_botFilepath
+        },
+        "console":{
+          "colorfulLogOut":self.setting_colorfulLogOut,
+          "enableOutputToLog":self.setting_enableOutputToLog
+        },
+        "msg":{
+          "groupList":self.setting_groupList,
+          "permissionList":self.setting_permissionList,
+          "givePermissionToAllAdmin":self.setting_givePermissionToAllAdmin,
+          "outputMsgToLog":self.setting_outputMsgToLog
+        },
+        "Dylan":{
+          "enableUpdate":self.setting_enableUpdate,
+          "enableAnnouncement":self.setting_enableAnnouncement,
+          "chosenTheme":self.setting_chosenTheme,
+        }
+      },
       "regularlist":self.regularlist
       }
+    self.loadSetting()
+    
+  def loadSetting(self):
+    settingList=forms["setting"]
+    for group in settingList:
+      for object in settingList[group]:
+        if type(settings[group][object])==bool:
+          if "setChecked" in dir(settingList[group][object]):
+            settingList[group][object].setChecked(settings[group][object])
+        elif type(settings[group][object])==int:
+          if "setValue" in dir(settingList[group][object]):
+            settingList[group][object].setValue(settings[group][object])
+          elif "setCurrentIndex" in dir(settingList[group][object]):
+            settingList[group][object].setCurrentIndex(settings[group][object])
+        elif type(settings[group][object])==str:
+          if "setText" in dir(settingList[group][object]):
+            settingList[group][object].setText(settings[group][object])
+    self.setThemes(self.setting_chosenTheme.currentIndex())
+
+  def setHtml(self,theme):
+    self.Panel_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=539&height=319&type=bds&theme={theme}"))
+    self.Panel_console.page().setWebChannel(channel)
+    self.CQ_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=599&height=382&type=bot&theme={theme}"))
+    self.CQ_console.page().setWebChannel(channel)
+
+  def connectFunctions(self):
+    '''连接组件与函数'''
+    self.setting_selectfile.clicked.connect(lambda: self.selectFile())
+    self.Panel_start.clicked.connect(lambda: self.serverControl(1))
+    self.Panel_stop.clicked.connect(lambda: self.serverControl(2))
+    self.Panel_input.returnPressed.connect(self.transferCommand)
+
+  def setThemes(self,themeId):
+    '''设置主题'''
+    if themeId==0:
+      self.setting_scrollArea.setStyleSheet(
+        "#setting_scrollAreaWidgetContents{\nbackground:rgb(255,255,255);}")
+      self.setHtml("default")
+    elif themeId==1:
+      qApp.setStyle("Fusion")
+      self.setting_scrollArea.setStyleSheet(
+        "#setting_scrollAreaWidgetContents{\nbackground:rgb(252,252,252);}")
+      self.setHtml("fusion")
+    elif themeId==2:
+      qApp.setStyle("Fusion")
+      dark_palette = QPalette()
+      dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+      dark_palette.setColor(QPalette.WindowText, QColor(255,255,255))
+      dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+      dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+      dark_palette.setColor(QPalette.ToolTipBase, QColor(255,255,255))
+      dark_palette.setColor(QPalette.ToolTipText, QColor(255,255,255))
+      dark_palette.setColor(QPalette.Text, QColor(255,255,255))
+      dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+      dark_palette.setColor(QPalette.Disabled,QPalette.Button, QColor(30,30,30))
+      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(0,0,0,0))
+      dark_palette.setColor(QPalette.ButtonText, QColor(255,255,255))
+      dark_palette.setColor(QPalette.BrightText, QColor(255,0,0))
+      dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+      dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+      dark_palette.setColor(QPalette.HighlightedText, QColor(0,0,0))
+      qApp.setPalette(dark_palette)
+      qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+      self.setHtml("fusion_dark")
 
   def addSingelRegular(self,type=str):
     '''读取时添加正则记录'''
@@ -94,14 +180,14 @@ class gui(QWidget,Ui_MainWindow):
     self.addSingelRegular("private")
     self.addSingelRegular("private_admin")
     self.addSingelRegular("disabled")
-  
+
   def removeAllReg(self):
     '''删除所有正则记录'''
     reply = QMessageBox.warning(
       self,
       'Dylan',
       "确定要清空所有记录吗？\n他们将会永远失去！（真的很久！）",
-      QMessageBox.Yes | QMessageBox.No, 
+      QMessageBox.Yes | QMessageBox.No,
       QMessageBox.No
       )
     if reply == QMessageBox.Yes:
@@ -116,23 +202,21 @@ class gui(QWidget,Ui_MainWindow):
 
   def transferCommand(self):
     '''转发输入命令'''
-    text=self.input.text()
+    text=self.Panel_input.text()
     outputCommand(text)
-    self.input.setText("")
+    self.Panel_input.setText("")
 
   def serverControl(self,type):
     '''服务器控制按钮'''
     global state
     if type==1 and state!=1:
-      if not os.path.exists(datas["setting"]["path"]):
+      if not os.path.exists(self.setting_filepath.text()):
         print("启动目标文件不存在")
       else:
         state=1
-        self.start.setDisabled(True)
-        self.stop.setDisabled(False)
-        # self.restart.setDisabled(False)
-        # self.forcestop.setDisabled(False)
-        self.input.setDisabled(False)
+        self.Panel_start.setDisabled(True)
+        self.Panel_stop.setDisabled(False)
+        self.Panel_input.setDisabled(False)
     elif type==2:
       outputCommand("stop")
 
@@ -140,9 +224,8 @@ class gui(QWidget,Ui_MainWindow):
     '''选择启动文件'''
     startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "可启动文件 (*.exe *.bat *.cmd)")
     if startFile[0]!='':
-      self.filepath.setText(startFile[0])
-      print(startFile)
-  
+      self.setting_filepath.setText(startFile[0])
+
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
     item = self.regularlist.indexAt(pos)
@@ -180,19 +263,26 @@ class gui(QWidget,Ui_MainWindow):
       reply = QMessageBox.warning(
       self,
       'Dylan',
-      f"确定要删除第{row+1}行记录吗？\n第{row+1}行将会永远失去！（真的很久！）",
-      QMessageBox.Yes | QMessageBox.No, 
+      f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
+      QMessageBox.Yes | QMessageBox.No,
       QMessageBox.No
       )
       if reply == QMessageBox.Yes:
         self.regularlist.removeRow(row)
 
-class Factorial(QObject):
+class Functions(QObject):
   '''QtWeb通信模块'''
   @pyqtSlot(str, result=str)
-  def factorial(self,void):
+  def bdslog(self,void):
     if not logQueue.empty():
       return logQueue.get()
+    else:
+      return "None"
+
+  @pyqtSlot(str, result=str)
+  def botlog(self,void):
+    if not botQueue.empty():
+      return botQueue.get()
     else:
       return "None"
 
@@ -217,14 +307,6 @@ def componentInformation():
           "private_admin":[],
           "group":[],
           "group_admin":[]
-        },
-        "setting":{
-          "enable_colorful_log":forms["enableColorfulLog"].isChecked(),
-          "compatibility_mode":forms["compatibilityMode"].isChecked(),
-          "path":forms["filepath"].text(),
-          "http_msg":8080,
-          "http_send":5700
-          
         }
       }
       rows=forms["regularlist"].rowCount()
@@ -243,17 +325,18 @@ def componentInformation():
             command=forms["regularlist"].item(singleRow,3).text()
           else:
             command=""
-          captureArea=forms["regularlist"].cellWidget(singleRow,0).currentText()
-          if captureArea=="禁用":
+          captureArea=forms["regularlist"].cellWidget(singleRow,0).currentIndex()
+          if captureArea==0:
             captureArea="disabled"
-          elif captureArea=="私聊（所有）":
-            captureArea="private"
-          elif captureArea=="私聊（管理）":
+          elif captureArea==1:
             captureArea="private_admin"
-          elif captureArea=="群聊（所有）":
-            captureArea="group"
-          elif captureArea=="群聊（管理）":
+          elif captureArea==2:
+            captureArea="private"
+
+          elif captureArea==3:
             captureArea="group_admin"
+          elif captureArea==4:
+            captureArea="group"
           datas["regular"][captureArea].append({
               "regular":regular,
               "command":command,
@@ -261,19 +344,61 @@ def componentInformation():
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
-            
+
+
+      settings={
+        "start":{
+          "filepath":forms["setting"]["start"]["filepath"].text(),
+          "compatibilityMode":forms["setting"]["start"]["compatibilityMode"].isChecked(),
+          "autoRestart":forms["setting"]["start"]["autoRestart"].isChecked()
+        },
+        "bot":{
+          "sendPort":forms["setting"]["bot"]["sendPort"].value(),
+          "listenPort":forms["setting"]["bot"]["listenPort"].value(),
+          "botFilepath":forms["setting"]["bot"]["botFilepath"].text()
+        },
+        "console":{
+          "colorfulLogOut":forms["setting"]["console"]["colorfulLogOut"].currentIndex(),
+          "enableOutputToLog":forms["setting"]["console"]["enableOutputToLog"].isChecked()
+        },
+        "msg":{
+          "groupList":processingList(forms["setting"]["msg"]["groupList"].toPlainText()),
+          "permissionList":processingList(forms["setting"]["msg"]["permissionList"].toPlainText()),
+          "givePermissionToAllAdmin":forms["setting"]["msg"]["givePermissionToAllAdmin"].isChecked(),
+          "outputMsgToLog":forms["setting"]["msg"]["outputMsgToLog"].isChecked()
+        },
+        "Dylan":{
+          "enableUpdate":forms["setting"]["Dylan"]["enableUpdate"].isChecked(),
+          "enableAnnouncement":forms["setting"]["Dylan"]["enableAnnouncement"].currentIndex(),
+          "chosenTheme":forms["setting"]["Dylan"]["chosenTheme"].currentIndex()
+        }
+      }
+      with open(os.path.join(selfPath,"setting.json"), 'w',encoding='utf-8')as jsonFile:
+        jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
+
     try:
       if MainWindow.isVisible():
         UiFinished=True
     except:
       continue
 
-def server(path):
+def processingList(text):
+  textList=text.split("\n")
+  list=[]
+  for i in textList:
+    if i and len(i)>=5 and len(i)<=12:
+      try:
+        list.append(int(i.replace(" ","")))
+      except:
+        pass
+  return list
+
+def server():
   '''服务器输出读取和状态监控'''
   global serverProcess,state,forms
   state=1
   serverProcess=subprocess.Popen(
-    path,
+    forms["setting"]["start"]["filepath"].text(),
     stdout=subprocess.PIPE,
     stdin=subprocess.PIPE,
     universal_newlines=True,
@@ -294,12 +419,12 @@ def server(path):
       log=outputRecognition(log)
       if not re.search('^[\n\s\r]+?$',log) and log!="":
         if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
-          forms["version"].setText(version[:10])
-          forms["gamemode"].setText(gamemode)
-          forms["difficulty"].setText(difficulty)
-          forms["state"].setText("已启动")
-          forms["levelname"].setText(levelname[:20])
-          forms["port"].setText(ipv4+" /"+ipv6)
+          forms["panel"]["version"].setText(version[:10])
+          forms["panel"]["gamemode"].setText(gamemode)
+          forms["panel"]["difficulty"].setText(difficulty)
+          forms["panel"]["state"].setText("已启动")
+          forms["panel"]["levelname"].setText(levelname[:20])
+          forms["panel"]["port"].setText(ipv4+" /"+ipv6)
           started=1
         if started==0:
           if log.find("Version")>0:
@@ -326,10 +451,10 @@ def server(path):
             ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
           elif log.find("IPv6")>0:
             ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
-          forms["state"].setText("启动中")
+          forms["panel"]["state"].setText("启动中")
         if not logQueue.full():
           log=escape(log)
-          if forms["enableColorfulLog"].isChecked():
+          if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
             log=colorLog(log)
           logQueue.put(log)
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
@@ -337,18 +462,18 @@ def server(path):
       logQueue.put("--------------------")
       logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]进程已退出"))
       time.sleep(0.05)
-      forms["port"].setText("- / -")
-      forms["levelname"].setText("-")
-      forms["difficulty"].setText("-")
-      forms["gamemode"].setText("-")
-      forms["state"].setText("未启动")
-      forms["version"].setText("-")
-      forms["input"].setText("")
-      forms["input"].setDisabled(True)
-      forms["start"].setDisabled(False)
-      forms["restart"].setDisabled(True)
-      forms["stop"].setDisabled(True)
-      forms["forcestop"].setDisabled(True)
+      forms["panel"]["port"].setText("- / -")
+      forms["panel"]["levelname"].setText("-")
+      forms["panel"]["difficulty"].setText("-")
+      forms["panel"]["gamemode"].setText("-")
+      forms["panel"]["state"].setText("未启动")
+      forms["panel"]["version"].setText("-")
+      forms["panel"]["input"].setText("")
+      forms["panel"]["input"].setDisabled(True)
+      forms["panel"]["start"].setDisabled(False)
+      forms["panel"]["restart"].setDisabled(True)
+      forms["panel"]["stop"].setDisabled(True)
+      forms["panel"]["forcestop"].setDisabled(True)
       break
     try:
       if not MainWindow.isVisible():
@@ -407,7 +532,7 @@ def startServer():
   while True:
     if state==1 and _state==0:
       _state=1
-      server(datas["setting"]["path"])
+      server()
       _state=0
     if state==1 or _state==1:
       try:
@@ -437,13 +562,38 @@ def statusMonitoring():
           break
       except:
         break
-      forms["cpu"].setText(str(psutil.cpu_percent())+"%")
-      forms["ram"].setText(str(psutil.virtual_memory()[2])+"%")
+      forms["panel"]["cpu"].setText(str(psutil.cpu_percent())+"%")
+      forms["panel"]["ram"].setText(str(psutil.virtual_memory()[2])+"%")
     if forms!="":
-      forms["cpu"].setText("-%")
-      forms["ram"].setText("-%")
+      forms["panel"]["cpu"].setText("-%")
+      forms["panel"]["ram"].setText("-%")
 
+app = Flask(__name__)
+@app.route('/', methods=["POST"])
+def post_data():
+  put = 'http://127.0.0.1:5700/send_group_msg?group_id={0}&message={1}&auto_escape=false'
+  if request.get_json().get("meta_event_type") == 'heartbeat':
+    return 'ok'
+  else:
+    print(request.get_json())
+  if request.get_json().get('message_type') == 'private':  # 私聊信息
+    nickname = request.get_json().get('sender').get('nickname')
+    uid = request.get_json().get('sender').get('user_id')
+    message = request.get_json().get('raw_message')
+    print(message, uid,nickname)
 
+  if request.get_json().get('message_type') == 'group':  # 如果是群聊信息
+    gid = request.get_json().get('group_id')
+    uid = request.get_json().get('sender').get('user_id')
+    card = request.get_json().get('sender').get('card')
+    message = request.get_json().get('raw_message')
+    print(message, uid, gid,card)
+    requests.get(url=put.format(954829203, message))
+    # requests.get(url=put.format(962568264, message))
+  return 'ok'
+
+def runHttp(port):
+  app.run(host='127.0.0.1', port=settings["cqhttp"]["http_msg"])
 
 def mainGui():
   '''主程序'''
@@ -456,21 +606,54 @@ def mainGui():
 
 if __name__=="__main__":
   channel = QWebChannel()
-  factorial = Factorial()
-  VERSION="Alpha 1.6.20220228"
+  Function = Functions()
+  VERSION="Alpha 1.6.20220228_2"
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
   print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
   commandQueue=queue.Queue(maxsize=100)
   logQueue=queue.Queue(maxsize=10000)
+  botQueue=queue.Queue(maxsize=10000)
   state=0
   forms=""
   if not os.path.exists(os.path.join(selfPath,"datas.json")):
-    datas={"_notice": "请不要在此修改任何内容！！！","regular": {"disabled": [],"group": [],"group_admin": [],"private": [],"private_admin": []},"setting": {"compatibility_mode": False,"enable_colorful_log": True,"http_msg": 8080,"http_send": 5700,"path": ""}}
+    datas={
+      "_notice": "请不要在此修改任何内容！！！",
+      "regular": {
+        "disabled": [],
+        "group": [],
+        "group_admin": [],
+        "private": [],
+        "private_admin": []
+        },
+      "setting": {
+        "compatibility_mode": False,
+        "enable_colorful_log": True,
+        "http_msg": 8080,
+        "http_send": 5700,
+        "path": ""
+        }
+      }
   else:
-    with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8')as jsonFile:
+    with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8') as jsonFile:
       datas=json.load(jsonFile)
+  if not os.path.exists(os.path.join(selfPath,"setting.json")):
+    settings={
+        "start_server":{
+          "enable_colorful_log":False,
+          "compatibility_mode":True,
+          "path":""
+        },
+        "cqhttp":{
+          "enable":True,
+          "http_msg":8080,
+          "http_send":5700
+        }
+      }
+  else:
+    with open(os.path.join(selfPath,"setting.json"), 'r',encoding='utf-8')as jsonFile:
+      settings=json.load(jsonFile)
   if not os.path.exists(os.path.join(selfPath,"console.html")):
     print("console.html文件不存在")
     exit(input())
