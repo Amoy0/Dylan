@@ -92,17 +92,20 @@ class gui(QWidget,Ui_MainWindow):
     settingList=forms["setting"]
     for group in settingList:
       for object in settingList[group]:
-        if type(settings[group][object])==bool:
-          if "setChecked" in dir(settingList[group][object]):
-            settingList[group][object].setChecked(settings[group][object])
-        elif type(settings[group][object])==int:
-          if "setValue" in dir(settingList[group][object]):
-            settingList[group][object].setValue(settings[group][object])
-          elif "setCurrentIndex" in dir(settingList[group][object]):
-            settingList[group][object].setCurrentIndex(settings[group][object])
-        elif type(settings[group][object])==str:
-          if "setText" in dir(settingList[group][object]):
-            settingList[group][object].setText(settings[group][object])
+        try:
+          if type(settings[group][object])==bool:
+            if "setChecked" in dir(settingList[group][object]):
+              settingList[group][object].setChecked(settings[group][object])
+          elif type(settings[group][object])==int:
+            if "setValue" in dir(settingList[group][object]):
+              settingList[group][object].setValue(settings[group][object])
+            elif "setCurrentIndex" in dir(settingList[group][object]):
+              settingList[group][object].setCurrentIndex(settings[group][object])
+          elif type(settings[group][object])==str:
+            if "setText" in dir(settingList[group][object]):
+              settingList[group][object].setText(settings[group][object])
+        except:
+          pass
     self.setThemes(self.setting_chosenTheme.currentIndex())
 
   def setHtml(self,theme):
@@ -163,15 +166,20 @@ class gui(QWidget,Ui_MainWindow):
       typeIndex=3
     elif type=="group":
       typeIndex=4
-    for i in datas["regular"][type]:
-      self.regularlist.insertRow(0)
-      captureArea=QComboBox()
-      captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）"])
-      captureArea.setCurrentIndex(typeIndex)
-      self.regularlist.setCellWidget(0, 0, captureArea)
-      self.regularlist.setItem(0,1,QTableWidgetItem(i["regular"]))
-      self.regularlist.setItem(0,2,QTableWidgetItem(i["remark"]))
-      self.regularlist.setItem(0,3,QTableWidgetItem(i["command"]))
+    for i in datas:
+      if i=="regular":
+        for a in ["regular"][type]:
+          try:
+            self.regularlist.insertRow(0)
+            captureArea=QComboBox()
+            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）"])
+            captureArea.setCurrentIndex(typeIndex)
+            self.regularlist.setCellWidget(0, 0, captureArea)
+            self.regularlist.setItem(0,1,QTableWidgetItem(i["regular"]))
+            self.regularlist.setItem(0,2,QTableWidgetItem(i["remark"]))
+            self.regularlist.setItem(0,3,QTableWidgetItem(i["command"]))
+          except:
+            pass
 
   def loadRegular(self):
     '''加载正则记录'''
@@ -618,39 +626,12 @@ if __name__=="__main__":
   state=0
   forms=""
   if not os.path.exists(os.path.join(selfPath,"datas.json")):
-    datas={
-      "_notice": "请不要在此修改任何内容！！！",
-      "regular": {
-        "disabled": [],
-        "group": [],
-        "group_admin": [],
-        "private": [],
-        "private_admin": []
-        },
-      "setting": {
-        "compatibility_mode": False,
-        "enable_colorful_log": True,
-        "http_msg": 8080,
-        "http_send": 5700,
-        "path": ""
-        }
-      }
+    datas={}
   else:
     with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8') as jsonFile:
       datas=json.load(jsonFile)
   if not os.path.exists(os.path.join(selfPath,"setting.json")):
-    settings={
-        "start_server":{
-          "enable_colorful_log":False,
-          "compatibility_mode":True,
-          "path":""
-        },
-        "cqhttp":{
-          "enable":True,
-          "http_msg":8080,
-          "http_send":5700
-        }
-      }
+    settings={}
   else:
     with open(os.path.join(selfPath,"setting.json"), 'r',encoding='utf-8')as jsonFile:
       settings=json.load(jsonFile)
