@@ -14,7 +14,7 @@ import psutil
 import PyQt5
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QUrl, pyqtSlot
+from PyQt5.QtCore import QObject, QUrl, pyqtSlot,QPoint
 from PyQt5.QtGui import QCursor, QIcon, QPalette,QColor
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
@@ -36,11 +36,16 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_restart.setDisabled(True)
     self.Panel_stop.setDisabled(True)
     self.Panel_forcestop.setDisabled(True)
-
-    self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
-    self.loadRegular()
-    self.connectFunctions()
+    self.Bot_stop.setDisabled(True)
     forms={
+      "bot":{
+        "start":self.Bot_start,
+        "stop":self.Bot_stop,
+        "qq":self.Bot_qq_2,
+        "state":self.Bot_state_2,
+        "receive":self.Bot_receive_2,
+        "send":self.Bot_send_2,
+      },
       "panel":{
         "console":self.Panel_console,
         "input":self.Panel_input,
@@ -59,11 +64,14 @@ class gui(QWidget,Ui_MainWindow):
       },
       "setting":{
         "start":{
+          "selectfile":self.setting_selectfile,
           "filepath":self.setting_filepath,
           "compatibilityMode":self.setting_compatibilityMode,
           "autoRestart":self.setting_autoRestart
         },
         "bot":{
+          "logout":self.setting_logout,
+          "enableOutputMsgToLog":self.setting_enableOutputMsgToLog,
           "sendPort":self.setting_sendPort,
           "listenPort":self.setting_listenPort,
           "botFilepath":self.setting_botFilepath
@@ -87,8 +95,11 @@ class gui(QWidget,Ui_MainWindow):
       "regularlist":self.regularlist
       }
     self.loadSetting()
+    self.loadRegular()
+    self.connectFunctions()
     
   def loadSetting(self):
+    '''加载设置'''
     settingList=forms["setting"]
     for group in settingList:
       for object in settingList[group]:
@@ -106,20 +117,55 @@ class gui(QWidget,Ui_MainWindow):
               settingList[group][object].setText(settings[group][object])
         except:
           pass
+    global sendPort,listenPort
+    listenPort=self.setting_listenPort.value()
+    sendPort=self.setting_sendPort.value()
     self.setThemes(self.setting_chosenTheme.currentIndex())
 
   def setHtml(self,theme):
+    '''设置控制台主题'''
     self.Panel_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=539&height=319&type=bds&theme={theme}"))
     self.Panel_console.page().setWebChannel(channel)
-    self.CQ_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=599&height=382&type=bot&theme={theme}"))
-    self.CQ_console.page().setWebChannel(channel)
+    self.Bot_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=599&height=382&type=bot&theme={theme}"))
+    self.Bot_console.page().setWebChannel(channel)
 
   def connectFunctions(self):
     '''连接组件与函数'''
-    self.setting_selectfile.clicked.connect(lambda: self.selectFile())
+    self.setting_groupList.textChanged.connect(lambda:self.checkList(1))
+    self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
+    self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
+    self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
+    self.setting_savePort.clicked.connect(lambda:self.savePort())
     self.Panel_start.clicked.connect(lambda: self.serverControl(1))
     self.Panel_stop.clicked.connect(lambda: self.serverControl(2))
+    self.Bot_start.clicked.connect(lambda: self.botControl(1))
+    self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
+
+  def checkList(self,target):
+    if target==1:
+      global groupText
+      print(self.setting_groupList.toPlainText().split("\n"))
+
+      for text in self.setting_groupList.toPlainText().split("\n"):
+        if not re.search('^[\d\n]+?$',text) and text!="":
+          print("error")
+
+  def savePort(self):
+    global sendPort,listenPort
+    if listenPort!=self.setting_listenPort.value():
+      info="已保存\n（接收端口将在下一次启动后生效）"
+      listenPort=self.setting_listenPort.value()
+    else:
+      if sendPort!=self.setting_sendPort.value():
+        sendPort=self.setting_sendPort.value()
+      info="已保存"
+    QMessageBox.information(
+      self,
+      "Dylan",
+      info,
+      QMessageBox.Yes
+    )
 
   def setThemes(self,themeId):
     '''设置主题'''
@@ -166,18 +212,20 @@ class gui(QWidget,Ui_MainWindow):
       typeIndex=3
     elif type=="group":
       typeIndex=4
+    elif type=="console":
+      typeIndex=5
     for i in datas:
       if i=="regular":
-        for a in ["regular"][type]:
+        for a in datas["regular"][type]:
           try:
             self.regularlist.insertRow(0)
             captureArea=QComboBox()
-            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）"])
+            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
             captureArea.setCurrentIndex(typeIndex)
             self.regularlist.setCellWidget(0, 0, captureArea)
-            self.regularlist.setItem(0,1,QTableWidgetItem(i["regular"]))
-            self.regularlist.setItem(0,2,QTableWidgetItem(i["remark"]))
-            self.regularlist.setItem(0,3,QTableWidgetItem(i["command"]))
+            self.regularlist.setItem(0,1,QTableWidgetItem(a["regular"]))
+            self.regularlist.setItem(0,2,QTableWidgetItem(a["remark"]))
+            self.regularlist.setItem(0,3,QTableWidgetItem(a["command"]))
           except:
             pass
 
@@ -188,6 +236,7 @@ class gui(QWidget,Ui_MainWindow):
     self.addSingelRegular("private")
     self.addSingelRegular("private_admin")
     self.addSingelRegular("disabled")
+    self.addSingelRegular("console")
 
   def removeAllReg(self):
     '''删除所有正则记录'''
@@ -216,23 +265,61 @@ class gui(QWidget,Ui_MainWindow):
 
   def serverControl(self,type):
     '''服务器控制按钮'''
-    global state
-    if type==1 and state!=1:
+    global serverState
+    if type==1 and serverState!=1:
       if not os.path.exists(self.setting_filepath.text()):
         print("启动目标文件不存在")
       else:
-        state=1
+        serverState=1
         self.Panel_start.setDisabled(True)
         self.Panel_stop.setDisabled(False)
         self.Panel_input.setDisabled(False)
     elif type==2:
       outputCommand("stop")
 
-  def selectFile(self):
+  def botControl(self,type):
+    '''bot控制'''
+    global botState,botProcess,botQueue
+    if type==1:
+      botState=1
+      botQueue.put("#cls")
+      self.setting_savePort.setDisabled(True)
+      self.setting_logout.setDisabled(True)
+      self.Bot_start.setDisabled(True)
+      self.Bot_stop.setDisabled(False)
+      self.setting_sendPort.setDisabled(True)
+      self.setting_listenPort.setDisabled(True)
+      self.setting_botSelectfile.setDisabled(True)
+      self.setting_botFilepath.setDisabled(True)
+    elif type==2 and botState==1:
+      closeBot()
+      time.sleep(0.1)
+      global qq 
+      botQueue.put("[<span style='color:#007ACC'>Dylan</span>]机器人已关闭")
+      qq=0
+      self.Bot_qq_2.setText("-")
+      self.Bot_receive_2.setText("0")
+      self.Bot_send_2.setText("0")
+      self.Bot_state_2.setText("未启动")
+      self.Bot_start.setDisabled(False)
+      self.Bot_stop.setDisabled(True)
+      self.setting_savePort.setDisabled(False)
+      self.setting_logout.setDisabled(False)
+      self.setting_sendPort.setDisabled(False)
+      self.setting_listenPort.setDisabled(False)
+      self.setting_botSelectfile.setDisabled(False)
+      self.setting_botFilepath.setDisabled(False)
+      botState=0
+
+
+  def selectFile(self,area=int):
     '''选择启动文件'''
-    startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "可启动文件 (*.exe *.bat *.cmd)")
+    startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "启动文件 (*.exe *.bat *.cmd)")
     if startFile[0]!='':
-      self.setting_filepath.setText(startFile[0])
+      if area==0:
+        self.setting_filepath.setText(startFile[0])
+      elif area==1:
+        self.setting_botFilepath.setText(startFile[0])
 
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
@@ -265,7 +352,7 @@ class gui(QWidget,Ui_MainWindow):
     if type==1:
       self.regularlist.insertRow(0)
       captureArea=QComboBox()
-      captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）"])
+      captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
       self.regularlist.setCellWidget(0, 0, captureArea)
     elif type==2 and row!=-1:
       reply = QMessageBox.warning(
@@ -277,6 +364,22 @@ class gui(QWidget,Ui_MainWindow):
       )
       if reply == QMessageBox.Yes:
         self.regularlist.removeRow(row)
+
+  def closeEvent(self, event):
+    '''关闭事件'''
+    global serverProcess,state
+    if serverState==1:
+      event.ignore()
+      QMessageBox.information(self,
+        "Dylan", 
+        "服务器进程未关闭",
+        QMessageBox.Yes
+      )
+    else:
+      closeBot()
+      event.accept()
+
+
 
 class Functions(QObject):
   '''QtWeb通信模块'''
@@ -294,9 +397,21 @@ class Functions(QObject):
     else:
       return "None"
 
+def closeBot():
+  '''关闭bot'''
+  global botProcess
+  try:
+    psutil.Process(botProcess.pid).children()[0].kill()
+  except:
+    pass
+  try:
+    botProcess.kill()
+  except:
+    pass
+
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas
+  global MainWindow,forms,datas,sendPort,listenPort
   UiFinished=False
   while True:
     time.sleep(1)
@@ -314,7 +429,8 @@ def componentInformation():
           "private":[],
           "private_admin":[],
           "group":[],
-          "group_admin":[]
+          "group_admin":[],
+          "console":[]
         }
       }
       rows=forms["regularlist"].rowCount()
@@ -340,11 +456,12 @@ def componentInformation():
             captureArea="private_admin"
           elif captureArea==2:
             captureArea="private"
-
           elif captureArea==3:
             captureArea="group_admin"
           elif captureArea==4:
             captureArea="group"
+          elif captureArea==5:
+            captureArea="console"
           datas["regular"][captureArea].append({
               "regular":regular,
               "command":command,
@@ -361,17 +478,18 @@ def componentInformation():
           "autoRestart":forms["setting"]["start"]["autoRestart"].isChecked()
         },
         "bot":{
-          "sendPort":forms["setting"]["bot"]["sendPort"].value(),
-          "listenPort":forms["setting"]["bot"]["listenPort"].value(),
-          "botFilepath":forms["setting"]["bot"]["botFilepath"].text()
+          "sendPort":sendPort,
+          "listenPort":listenPort,
+          "botFilepath":forms["setting"]["bot"]["botFilepath"].text(),
+          "enableOutputMsgToLog":forms["setting"]["bot"]["enableOutputMsgToLog"].isChecked()
         },
         "console":{
           "colorfulLogOut":forms["setting"]["console"]["colorfulLogOut"].currentIndex(),
           "enableOutputToLog":forms["setting"]["console"]["enableOutputToLog"].isChecked()
         },
         "msg":{
-          "groupList":processingList(forms["setting"]["msg"]["groupList"].toPlainText()),
-          "permissionList":processingList(forms["setting"]["msg"]["permissionList"].toPlainText()),
+          # "groupList":processingList(forms["setting"]["msg"]["groupList"].toPlainText()),
+          # "permissionList":processingList(forms["setting"]["msg"]["permissionList"].toPlainText()),
           "givePermissionToAllAdmin":forms["setting"]["msg"]["givePermissionToAllAdmin"].isChecked(),
           "outputMsgToLog":forms["setting"]["msg"]["outputMsgToLog"].isChecked()
         },
@@ -403,8 +521,11 @@ def processingList(text):
 
 def server():
   '''服务器输出读取和状态监控'''
-  global serverProcess,state,forms
-  state=1
+  global serverProcess,serverState,forms
+  forms["setting"]["start"]["selectfile"].setDisabled(True)
+  forms["setting"]["start"]["filepath"].setDisabled(True)
+  forms["setting"]["start"]["compatibilityMode"].setDisabled(True)
+  serverState=1
   serverProcess=subprocess.Popen(
     forms["setting"]["start"]["filepath"].text(),
     stdout=subprocess.PIPE,
@@ -416,13 +537,12 @@ def server():
   logQueue.put("#cls")
   logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
   started=0
-  line=0
   print(serverProcess.pid)
-  while state==1:
+  while serverState==1:
     try:
       log=serverProcess.stdout.readline()
     except:
-      state=0
+      serverState=0
     if log!=None:
       log=outputRecognition(log)
       if not re.search('^[\n\s\r]+?$',log) and log!="":
@@ -461,12 +581,12 @@ def server():
             ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
           forms["panel"]["state"].setText("启动中")
         if not logQueue.full():
-          log=escape(log)
-          if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
+          log=escapeLog(log)
+          if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==1:
             log=colorLog(log)
           logQueue.put(log)
-    if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or state==0:
-      state=0
+    if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or serverState==0:
+      serverState=0
       logQueue.put("--------------------")
       logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]进程已退出"))
       time.sleep(0.05)
@@ -482,6 +602,9 @@ def server():
       forms["panel"]["restart"].setDisabled(True)
       forms["panel"]["stop"].setDisabled(True)
       forms["panel"]["forcestop"].setDisabled(True)
+      forms["setting"]["start"]["selectfile"].setDisabled(False)
+      forms["setting"]["start"]["filepath"].setDisabled(False)
+      forms["setting"]["start"]["compatibilityMode"].setDisabled(False)
       break
     try:
       if not MainWindow.isVisible():
@@ -489,14 +612,12 @@ def server():
         break
     except:
       serverProcess.stdin.write("stop\n")
+      print("?")
       break
-    if line>32000:
-      logQueue.put("#cls")
 
 def outputCommand(command):
   '''将指令输出至bds和控制台'''
   global serverProcess
-  print(command)
   try:
     serverProcess.stdin.write(command+"\n")
   except:
@@ -505,7 +626,7 @@ def outputCommand(command):
 
 
 def outputRecognition(log):
-  '''处理LL加载器下的输入前缀和颜色代码'''
+  '''处理输入前缀和颜色代码'''
   log=re.sub("\[.+?m","",log)
   log=re.sub("","",log)
   log=re.sub('^> ',"",log)
@@ -513,7 +634,7 @@ def outputRecognition(log):
   log=re.sub('\s$',"",log)
   return log
 
-def escape(log):
+def escapeLog(log):
   '''转义log中的部分字符'''
   log=log.replace('/',"&#47;")
   log=log.replace('"',"&quot;")
@@ -525,24 +646,66 @@ def escape(log):
 
 def colorLog(log):
   '''彩色日志处理'''
-  log=re.sub("\s(INFO|info|Info)",r"<span id='info'> \1</span>",log) #info
-  log=re.sub("\s(WARN|warn|Warn)",r"<span id='warn'><b> \1</b></span>",log) #warn
-  log=re.sub("\s(ERROR|error|Error)",r"<span id='error'><b> \1</b></span>",log) #error
-  log=re.sub("\s(DEBUG|debug|Debug)",r"<span id='debug'> \1</span>",log) #debug
+  log=re.sub("([\[\s])(INFO|info|Info)",r"\1<span id='info'>\2</span>",log) #info
+  log=re.sub("([\[\s])(WARNING|warning|Warning)",r"\1<span id='warn'><b>\2</b></span>",log) #warn
+  log=re.sub("([\[\s])(WARN|warn|Warn)",r"\1<span id='warn'><b>\2</b></span>",log) #warn
+  log=re.sub("([\[\s])(ERROR|error|Error)",r"\1<span id='error'><b>\2</b></span>",log) #error
+  log=re.sub("([\[\s])(DEBUG|debug|Debug)",r"\1<span id='debug'>\2</span>",log) #debug
   log=re.sub("\[(SERVER|server|Server)\]",r"[<span id='server'>\1</span>]",log) #server
   log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span id='\1'>\1</span>]",log)  #ck
-  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,3}))",r"<span id='file'>\1</span>",log)#{files}
+  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,4}))",r"<span id='file'>\1</span>",log)#{files}
   return log
 
-def startServer():
-  global state
-  _state=0
+def startBot():
+  global botState,botProcess,forms
   while True:
-    if state==1 and _state==0:
-      _state=1
+    time.sleep(1)
+    botStarted=0
+    if forms=="":
+      continue
+    if botState==1 and botStarted==0:
+      botStarted=1
+      botProcess=subprocess.Popen(
+      settings["bot"]["botFilepath"],
+      stdout=subprocess.PIPE,
+      stdin=subprocess.PIPE,
+      universal_newlines=True,
+      bufsize=1,
+      encoding="UTF-8"
+      )
+      started=0
+      while botState==1:
+        try:
+          log=botProcess.stdout.readline()
+        except:
+          botState=0
+        if re.search('qrcode.png',log):
+          qrpath=os.path.join(os.path.split(settings["bot"]["botFilepath"])[0],"qrcode.png")
+          os.system(qrpath)
+        if log.find("登录成功")>0 :
+          forms["bot"]["state"].setText("运行中")
+        if not re.search('^[\n\s\r]+?$',log) and log!="":
+          # print(log.replace("\n",""))
+          log=outputRecognition(log)
+          log=escapeLog(log)
+          log=colorLog(log)
+          botQueue.put(log)
+    else:
+      try:
+        forms["bot"]["start"].setDisabled(False)
+        forms["bot"]["stop"].setDisabled(True)
+      except:
+        break
+
+def startServer():
+  global serverState
+  _serverState=0
+  while True:
+    if serverState==1 and _serverState==0:
+      _serverState=1
       server()
-      _state=0
-    if state==1 or _state==1:
+      _serverState=0
+    if serverState==1 or _serverState==1:
       try:
         if not MainWindow.isVisible():
           serverProcess.stdin.write("stop\n")
@@ -555,35 +718,39 @@ def startServer():
 
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
-  global serverProcess,forms,MainWindow
+  global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
+  
   while True:
+    time.sleep(1)
     try:
-      if not MainWindow.isVisible():
-        break
+      if serverState==1:
+        forms["panel"]["cpu"].setText(str(psutil.cpu_percent())+"%")
+        forms["panel"]["ram"].setText(str(psutil.virtual_memory()[2])+"%")
+      elif forms!="":
+        forms["panel"]["cpu"].setText("-%")
+        forms["panel"]["ram"].setText("-%")
+      if botState==1:
+        if qq!=0:
+          forms["bot"]["qq"].setText(str(qq))
+          forms["bot"]["send"].setText(str(MessageSent))
+          forms["bot"]["receive"].setText(str(MessageReceived))
     except:
       break
-    time.sleep(0.5)
-    while state==1:
-      time.sleep(1)
-      try:
-        if not MainWindow.isVisible():
-          break
-      except:
-        break
-      forms["panel"]["cpu"].setText(str(psutil.cpu_percent())+"%")
-      forms["panel"]["ram"].setText(str(psutil.virtual_memory()[2])+"%")
-    if forms!="":
-      forms["panel"]["cpu"].setText("-%")
-      forms["panel"]["ram"].setText("-%")
+httpServer = Flask(__name__)
 
-app = Flask(__name__)
-@app.route('/', methods=["POST"])
+@httpServer.route('/', methods=["POST"])
 def post_data():
+  print(request.get_json())
+
   put = 'http://127.0.0.1:5700/send_group_msg?group_id={0}&message={1}&auto_escape=false'
   if request.get_json().get("meta_event_type") == 'heartbeat':
+    global qq,MessageReceived,MessageSent
+    qq=request.get_json().get("self_id")
+    MessageReceived=request.get_json().get("status").get("stat").get("MessageReceived")
+    MessageSent=request.get_json().get("status").get("stat").get("MessageSent")
+    print(qq,MessageReceived,MessageSent)
     return 'ok'
-  else:
-    print(request.get_json())
+  
   if request.get_json().get('message_type') == 'private':  # 私聊信息
     nickname = request.get_json().get('sender').get('nickname')
     uid = request.get_json().get('sender').get('user_id')
@@ -596,15 +763,15 @@ def post_data():
     card = request.get_json().get('sender').get('card')
     message = request.get_json().get('raw_message')
     print(message, uid, gid,card)
-    requests.get(url=put.format(954829203, message))
+    # requests.get(url=put.format(954829203, message))
     # requests.get(url=put.format(962568264, message))
   return 'ok'
 
-def runHttp(port):
-  app.run(host='127.0.0.1', port=settings["cqhttp"]["http_msg"])
+def runHttp():
+  httpServer.run(host='127.0.0.1', port=settings["bot"]["listenPort"])
 
 def mainGui():
-  '''主程序'''
+  '''主窗口'''
   global MainWindow
   app=QtWidgets.QApplication(sys.argv)
   app.setWindowIcon(QIcon(icoPath))
@@ -623,7 +790,9 @@ if __name__=="__main__":
   commandQueue=queue.Queue(maxsize=100)
   logQueue=queue.Queue(maxsize=10000)
   botQueue=queue.Queue(maxsize=10000)
-  state=0
+  qq=0
+  serverState=0
+  botState=0
   forms=""
   if not os.path.exists(os.path.join(selfPath,"datas.json")):
     datas={}
@@ -638,10 +807,15 @@ if __name__=="__main__":
   if not os.path.exists(os.path.join(selfPath,"console.html")):
     print("console.html文件不存在")
     exit(input())
+
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)
   getComponentInformation.start()
   serverThread=threading.Thread(target=startServer,daemon=True)
   serverThread.start()
   monitoringThread=threading.Thread(target=statusMonitoring,daemon=True)
   monitoringThread.start()
+  botHttpThread=threading.Thread(target=runHttp,daemon=True)
+  botHttpThread.start()
+  botThread=threading.Thread(target=startBot,daemon=True)
+  botThread.start()
   mainGui()
