@@ -9,7 +9,7 @@ import time
 
 import requests
 from flask import Flask, request
-
+from bot import *
 import psutil
 import PyQt5
 from gui import Ui_MainWindow
@@ -97,7 +97,7 @@ class gui(QWidget,Ui_MainWindow):
     self.loadSetting()
     self.loadRegular()
     self.connectFunctions()
-    
+
   def loadSetting(self):
     '''加载设置'''
     settingList=forms["setting"]
@@ -115,6 +115,12 @@ class gui(QWidget,Ui_MainWindow):
           elif type(settings[group][object])==str:
             if "setText" in dir(settingList[group][object]):
               settingList[group][object].setText(settings[group][object])
+          elif type(settings[group][object])==list:
+            if "setPlainText" in dir(settingList[group][object]):
+              text=""
+              for i in settings[group][object]:
+                text=text+str(i)+"\n"
+              settingList[group][object].setPlainText(text)
         except:
           pass
     global sendPort,listenPort
@@ -131,7 +137,6 @@ class gui(QWidget,Ui_MainWindow):
 
   def connectFunctions(self):
     '''连接组件与函数'''
-    self.setting_groupList.textChanged.connect(lambda:self.checkList(1))
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
     self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
     self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
@@ -142,14 +147,6 @@ class gui(QWidget,Ui_MainWindow):
     self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
 
-  def checkList(self,target):
-    if target==1:
-      global groupText
-      print(self.setting_groupList.toPlainText().split("\n"))
-
-      for text in self.setting_groupList.toPlainText().split("\n"):
-        if not re.search('^[\d\n]+?$',text) and text!="":
-          print("error")
 
   def savePort(self):
     global sendPort,listenPort
@@ -294,8 +291,8 @@ class gui(QWidget,Ui_MainWindow):
     elif type==2 and botState==1:
       closeBot()
       time.sleep(0.1)
-      global qq 
-      botQueue.put("[<span style='color:#007ACC'>Dylan</span>]机器人已关闭")
+      global qq
+      botQueue.put("<br>[<span style='color:#007ACC'>Dylan</span>]机器人已关闭")
       qq=0
       self.Bot_qq_2.setText("-")
       self.Bot_receive_2.setText("0")
@@ -314,11 +311,13 @@ class gui(QWidget,Ui_MainWindow):
 
   def selectFile(self,area=int):
     '''选择启动文件'''
-    startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "启动文件 (*.exe *.bat *.cmd)")
-    if startFile[0]!='':
-      if area==0:
+    if area==0:
+      startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "启动文件 (*.exe *.bat *.cmd)")
+      if startFile[0]!='':
         self.setting_filepath.setText(startFile[0])
-      elif area==1:
+    elif area==1:
+      startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "go-cqhttp (go-cqhttp_windows_arm64.exe go-cqhttp_windows_amd64.exe)")
+      if startFile[0]!='':
         self.setting_botFilepath.setText(startFile[0])
 
   def createRegularMenu(self,pos):
@@ -371,7 +370,7 @@ class gui(QWidget,Ui_MainWindow):
     if serverState==1:
       event.ignore()
       QMessageBox.information(self,
-        "Dylan", 
+        "Dylan",
         "服务器进程未关闭",
         QMessageBox.Yes
       )
@@ -411,7 +410,7 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas,sendPort,listenPort
+  global MainWindow,forms,datas,sendPort,listenPort,settings
   UiFinished=False
   while True:
     time.sleep(1)
@@ -423,6 +422,7 @@ def componentInformation():
       except:
         exit()
       datas={
+        "type":"datas",
         "_notice":"请不要在此修改任何内容！！！",
         "regular":{
           "disabled":[],
@@ -470,8 +470,16 @@ def componentInformation():
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
 
-
+      groupList=[]
+      permissionList=[]
+      for text in forms["setting"]["msg"]["groupList"].toPlainText().split("\n"):
+        if  re.search('^[\d]{6,16}$',text) and text!="":
+          groupList.append(int(text))
+      for text in forms["setting"]["msg"]["permissionList"].toPlainText().split("\n"):
+        if  re.search('^[\d]{6,16}$',text) and text!="":
+          permissionList.append(int(text))
       settings={
+        "type":"settings",
         "start":{
           "filepath":forms["setting"]["start"]["filepath"].text(),
           "compatibilityMode":forms["setting"]["start"]["compatibilityMode"].isChecked(),
@@ -488,8 +496,8 @@ def componentInformation():
           "enableOutputToLog":forms["setting"]["console"]["enableOutputToLog"].isChecked()
         },
         "msg":{
-          # "groupList":processingList(forms["setting"]["msg"]["groupList"].toPlainText()),
-          # "permissionList":processingList(forms["setting"]["msg"]["permissionList"].toPlainText()),
+          "groupList":groupList,
+          "permissionList":permissionList,
           "givePermissionToAllAdmin":forms["setting"]["msg"]["givePermissionToAllAdmin"].isChecked(),
           "outputMsgToLog":forms["setting"]["msg"]["outputMsgToLog"].isChecked()
         },
@@ -501,23 +509,13 @@ def componentInformation():
       }
       with open(os.path.join(selfPath,"setting.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
-
+      regQueue.put(settings)
+      regQueue.put(datas)
     try:
       if MainWindow.isVisible():
         UiFinished=True
     except:
       continue
-
-def processingList(text):
-  textList=text.split("\n")
-  list=[]
-  for i in textList:
-    if i and len(i)>=5 and len(i)<=12:
-      try:
-        list.append(int(i.replace(" ","")))
-      except:
-        pass
-  return list
 
 def server():
   '''服务器输出读取和状态监控'''
@@ -657,23 +655,27 @@ def colorLog(log):
   return log
 
 def startBot():
-  global botState,botProcess,forms
+  global botState,botProcess,forms,settings
   while True:
     time.sleep(1)
     botStarted=0
     if forms=="":
       continue
     if botState==1 and botStarted==0:
+      if not os.path.exists(settings["bot"]["botFilepath"]):
+        botState==0
+        continue
       botStarted=1
+      with open(os.path.join(selfPath,"go-cqhttp.bat"), 'w',encoding='utf-8')as bat:
+        bat.write("chcp 65001\ncd "+os.path.split(settings["bot"]["botFilepath"])[0]+"\necho.#cls\n"+settings["bot"]["botFilepath"])
       botProcess=subprocess.Popen(
-      settings["bot"]["botFilepath"],
+      os.path.join(selfPath,"go-cqhttp.bat"),
       stdout=subprocess.PIPE,
       stdin=subprocess.PIPE,
       universal_newlines=True,
       bufsize=1,
       encoding="UTF-8"
       )
-      started=0
       while botState==1:
         try:
           log=botProcess.stdout.readline()
@@ -719,7 +721,7 @@ def startServer():
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
   global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
-  
+
   while True:
     time.sleep(1)
     try:
@@ -740,35 +742,26 @@ httpServer = Flask(__name__)
 
 @httpServer.route('/', methods=["POST"])
 def post_data():
-  print(request.get_json())
 
-  put = 'http://127.0.0.1:5700/send_group_msg?group_id={0}&message={1}&auto_escape=false'
   if request.get_json().get("meta_event_type") == 'heartbeat':
     global qq,MessageReceived,MessageSent
     qq=request.get_json().get("self_id")
     MessageReceived=request.get_json().get("status").get("stat").get("MessageReceived")
     MessageSent=request.get_json().get("status").get("stat").get("MessageSent")
-    print(qq,MessageReceived,MessageSent)
     return 'ok'
-  
-  if request.get_json().get('message_type') == 'private':  # 私聊信息
-    nickname = request.get_json().get('sender').get('nickname')
-    uid = request.get_json().get('sender').get('user_id')
-    message = request.get_json().get('raw_message')
-    print(message, uid,nickname)
+  elif request.get_json().get('message_type') == 'private' or request.get_json().get('message_type') == 'group':
+    regQueue.put(request.get_json())
+    return 'ok'
 
-  if request.get_json().get('message_type') == 'group':  # 如果是群聊信息
-    gid = request.get_json().get('group_id')
-    uid = request.get_json().get('sender').get('user_id')
-    card = request.get_json().get('sender').get('card')
-    message = request.get_json().get('raw_message')
-    print(message, uid, gid,card)
-    # requests.get(url=put.format(954829203, message))
-    # requests.get(url=put.format(962568264, message))
-  return 'ok'
 
 def runHttp():
-  httpServer.run(host='127.0.0.1', port=settings["bot"]["listenPort"])
+  if settings.get("bot") is None:
+    port=5700
+  elif settings.get("bot").get("listenPort") is None:
+    port=5700
+  else:
+    port=settings["bot"]["listenPort"]
+  httpServer.run(host='127.0.0.1', port=port)
 
 def mainGui():
   '''主窗口'''
@@ -782,14 +775,16 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.6.20220228_2"
+  VERSION="Alpha 1.7 pre"
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
   print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
-  commandQueue=queue.Queue(maxsize=100)
-  logQueue=queue.Queue(maxsize=10000)
-  botQueue=queue.Queue(maxsize=10000)
+  commandQueue=queue.Queue(maxsize=0)
+  logQueue=queue.Queue(maxsize=0)
+  botQueue=queue.Queue(maxsize=0)
+  regQueue=queue.Queue(maxsize=0)
+  permissionList=[]
   qq=0
   serverState=0
   botState=0
@@ -803,7 +798,10 @@ if __name__=="__main__":
     settings={}
   else:
     with open(os.path.join(selfPath,"setting.json"), 'r',encoding='utf-8')as jsonFile:
-      settings=json.load(jsonFile)
+      try:
+        settings=json.load(jsonFile)
+      except:
+        settings={}
   if not os.path.exists(os.path.join(selfPath,"console.html")):
     print("console.html文件不存在")
     exit(input())
@@ -818,4 +816,6 @@ if __name__=="__main__":
   botHttpThread.start()
   botThread=threading.Thread(target=startBot,daemon=True)
   botThread.start()
+  msgThread=threading.Thread(target=lambda:messageProcessing(regQueue),daemon=True)
+  msgThread.start()
   mainGui()

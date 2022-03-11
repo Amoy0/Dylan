@@ -935,7 +935,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-240</y>
+         <y>0</y>
          <width>800</width>
          <height>710</height>
         </rect>
@@ -986,8 +986,8 @@
            <pointsize>10</pointsize>
           </font>
          </property>
-         <property name="readOnly">
-          <bool>true</bool>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
          </property>
         </widget>
         <widget class="QPushButton" name="setting_selectfile">
@@ -1121,8 +1121,11 @@
            <pointsize>10</pointsize>
           </font>
          </property>
-         <property name="readOnly">
-          <bool>true</bool>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="text">
+          <string/>
          </property>
         </widget>
         <widget class="QPushButton" name="setting_botSelectfile">
