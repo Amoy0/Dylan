@@ -1183,7 +1183,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>清空登录态</string>
+          <string>清空登录态和缓存</string>
          </property>
         </widget>
         <widget class="QCheckBox" name="setting_enableOutputMsgToLog">
@@ -1264,6 +1264,19 @@
          </property>
          <property name="text">
           <string>保存到日志文件</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="setting_outputCommandToConsole">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>50</y>
+           <width>201</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>输出执行的命令到控制台显示</string>
          </property>
         </widget>
        </widget>
@@ -1430,8 +1443,14 @@
            <height>31</height>
           </rect>
          </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="text">
-          <string>清空缓存</string>
+          <string>重置设置</string>
          </property>
         </widget>
         <widget class="QComboBox" name="setting_chosenTheme">

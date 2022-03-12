@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import queue
@@ -9,13 +10,14 @@ import time
 
 import requests
 from flask import Flask, request
-from bot import *
+
 import psutil
 import PyQt5
+from bot import *
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QUrl, pyqtSlot,QPoint
-from PyQt5.QtGui import QCursor, QIcon, QPalette,QColor
+from PyQt5.QtCore import QObject, QPoint, QUrl, pyqtSlot
+from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -78,7 +80,8 @@ class gui(QWidget,Ui_MainWindow):
         },
         "console":{
           "colorfulLogOut":self.setting_colorfulLogOut,
-          "enableOutputToLog":self.setting_enableOutputToLog
+          "enableOutputToLog":self.setting_enableOutputToLog,
+          "outputCommandToConsole":self.setting_outputCommandToConsole
         },
         "msg":{
           "groupList":self.setting_groupList,
@@ -262,8 +265,10 @@ class gui(QWidget,Ui_MainWindow):
 
   def serverControl(self,type):
     '''服务器控制按钮'''
-    global serverState
+    global serverState,commandQueue
     if type==1 and serverState!=1:
+      while not commandQueue.empty():
+        commandQueue.get()
       if not os.path.exists(self.setting_filepath.text()):
         print("启动目标文件不存在")
       else:
@@ -493,7 +498,8 @@ def componentInformation():
         },
         "console":{
           "colorfulLogOut":forms["setting"]["console"]["colorfulLogOut"].currentIndex(),
-          "enableOutputToLog":forms["setting"]["console"]["enableOutputToLog"].isChecked()
+          "enableOutputToLog":forms["setting"]["console"]["enableOutputToLog"].isChecked(),
+          "outputCommandToConsole":forms["setting"]["console"]["outputCommandToConsole"].isChecked()
         },
         "msg":{
           "groupList":groupList,
@@ -511,6 +517,8 @@ def componentInformation():
         jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
       regQueue.put(settings)
       regQueue.put(datas)
+      if serverState==1 and not commandQueue.empty():
+        outputCommand(commandQueue.get())
     try:
       if MainWindow.isVisible():
         UiFinished=True
@@ -519,7 +527,7 @@ def componentInformation():
 
 def server():
   '''服务器输出读取和状态监控'''
-  global serverProcess,serverState,forms
+  global serverProcess,serverState,forms,commandQueue
   forms["setting"]["start"]["selectfile"].setDisabled(True)
   forms["setting"]["start"]["filepath"].setDisabled(True)
   forms["setting"]["start"]["compatibilityMode"].setDisabled(True)
@@ -543,6 +551,10 @@ def server():
       serverState=0
     if log!=None:
       log=outputRecognition(log)
+      regQueue.put({
+        "log":log,
+        "type":"console"
+      })
       if not re.search('^[\n\s\r]+?$',log) and log!="":
         if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
           forms["panel"]["version"].setText(version[:10])
@@ -578,11 +590,10 @@ def server():
           elif log.find("IPv6")>0:
             ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
           forms["panel"]["state"].setText("启动中")
-        if not logQueue.full():
-          log=escapeLog(log)
-          if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==1:
-            log=colorLog(log)
-          logQueue.put(log)
+        log=escapeLog(log)
+        if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
+          log=colorLog(log)
+        logQueue.put(log)
     if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or serverState==0:
       serverState=0
       logQueue.put("--------------------")
@@ -780,10 +791,10 @@ if __name__=="__main__":
   print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
-  commandQueue=queue.Queue(maxsize=0)
   logQueue=queue.Queue(maxsize=0)
   botQueue=queue.Queue(maxsize=0)
   regQueue=queue.Queue(maxsize=0)
+  commandQueue=queue.Queue(maxsize=0)
   permissionList=[]
   qq=0
   serverState=0
@@ -816,6 +827,6 @@ if __name__=="__main__":
   botHttpThread.start()
   botThread=threading.Thread(target=startBot,daemon=True)
   botThread.start()
-  msgThread=threading.Thread(target=lambda:messageProcessing(regQueue),daemon=True)
+  msgThread=threading.Thread(target=lambda:messageProcessing(regQueue,commandQueue),daemon=True)
   msgThread.start()
   mainGui()

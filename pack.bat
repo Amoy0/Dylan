@@ -1,2 +1,2 @@
-pyinstaller -F main.py -i ico.ico
+pyinstaller -D Dylan.py -i ico.ico
 pause
