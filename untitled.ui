@@ -989,6 +989,9 @@
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
         </widget>
         <widget class="QPushButton" name="setting_selectfile">
          <property name="geometry">
@@ -1004,6 +1007,9 @@
          </property>
         </widget>
         <widget class="QCheckBox" name="setting_compatibilityMode">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>20</x>
@@ -1017,6 +1023,9 @@
          </property>
         </widget>
         <widget class="QCheckBox" name="setting_autoRestart">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>20</x>
@@ -1127,6 +1136,9 @@
          <property name="text">
           <string/>
          </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
         </widget>
         <widget class="QPushButton" name="setting_botSelectfile">
          <property name="geometry">
@@ -1199,6 +1211,19 @@
           <string>保存消息和数据包到日志文件</string>
          </property>
         </widget>
+        <widget class="Line" name="line_2">
+         <property name="geometry">
+          <rect>
+           <x>153</x>
+           <y>30</y>
+           <width>31</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
        </widget>
        <widget class="QGroupBox" name="setting_console">
         <property name="geometry">
@@ -1235,7 +1260,7 @@
           </rect>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <item>
           <property name="text">
@@ -1276,7 +1301,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>输出执行的命令到控制台显示</string>
+          <string>输出执行的命令输出到控制台</string>
          </property>
         </widget>
        </widget>
@@ -1357,19 +1382,6 @@
           <string>赋予所有群主和管理员管理权限</string>
          </property>
         </widget>
-        <widget class="QCheckBox" name="setting_outputMsgToLog">
-         <property name="geometry">
-          <rect>
-           <x>520</x>
-           <y>70</y>
-           <width>171</width>
-           <height>16</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>保存消息记录到日志</string>
-         </property>
-        </widget>
        </widget>
        <widget class="QGroupBox" name="setting_dylan">
         <property name="geometry">
@@ -1397,6 +1409,9 @@
          </property>
         </widget>
         <widget class="QComboBox" name="setting_enableAnnouncement">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>50</x>
@@ -1404,6 +1419,9 @@
            <width>121</width>
            <height>21</height>
           </rect>
+         </property>
+         <property name="currentIndex">
+          <number>2</number>
          </property>
          <item>
           <property name="text">
@@ -1435,6 +1453,9 @@
          </property>
         </widget>
         <widget class="QPushButton" name="setting_clearLogs">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>210</x>
@@ -1492,6 +1513,9 @@
          </property>
         </widget>
         <widget class="QPushButton" name="setting_state">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>210</x>

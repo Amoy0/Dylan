@@ -1,19 +1,19 @@
-import csv
+import datetime
 import json
 import os
 import queue
 import re
+from shutil import rmtree
 import subprocess
 import sys
 import threading
 import time
-
-import requests
-from flask import Flask, request
-
+import win32api,win32con
 import psutil
 import PyQt5
+import requests
 from bot import *
+from flask import Flask, request
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QPoint, QUrl, pyqtSlot
@@ -40,6 +40,7 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_forcestop.setDisabled(True)
     self.Bot_stop.setDisabled(True)
     forms={
+      "self":self,
       "bot":{
         "start":self.Bot_start,
         "stop":self.Bot_stop,
@@ -86,8 +87,7 @@ class gui(QWidget,Ui_MainWindow):
         "msg":{
           "groupList":self.setting_groupList,
           "permissionList":self.setting_permissionList,
-          "givePermissionToAllAdmin":self.setting_givePermissionToAllAdmin,
-          "outputMsgToLog":self.setting_outputMsgToLog
+          "givePermissionToAllAdmin":self.setting_givePermissionToAllAdmin
         },
         "Dylan":{
           "enableUpdate":self.setting_enableUpdate,
@@ -142,6 +142,7 @@ class gui(QWidget,Ui_MainWindow):
     '''连接组件与函数'''
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
     self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
+    self.setting_logout.clicked.connect(lambda: self.botControl(3))
     self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
     self.setting_savePort.clicked.connect(lambda:self.savePort())
     self.Panel_start.clicked.connect(lambda: self.serverControl(1))
@@ -152,6 +153,7 @@ class gui(QWidget,Ui_MainWindow):
 
 
   def savePort(self):
+    '''保存端口'''
     global sendPort,listenPort
     if listenPort!=self.setting_listenPort.value():
       info="已保存\n（接收端口将在下一次启动后生效）"
@@ -270,7 +272,12 @@ class gui(QWidget,Ui_MainWindow):
       while not commandQueue.empty():
         commandQueue.get()
       if not os.path.exists(self.setting_filepath.text()):
-        print("启动目标文件不存在")
+        QMessageBox.information(
+          self,
+          "Dylan",
+          "启动文件不存在",
+          QMessageBox.Yes
+        )
       else:
         serverState=1
         self.Panel_start.setDisabled(True)
@@ -281,18 +288,26 @@ class gui(QWidget,Ui_MainWindow):
 
   def botControl(self,type):
     '''bot控制'''
-    global botState,botProcess,botQueue
+    global botState,botProcess,botQueue,selfPath,settings
     if type==1:
-      botState=1
-      botQueue.put("#cls")
-      self.setting_savePort.setDisabled(True)
-      self.setting_logout.setDisabled(True)
-      self.Bot_start.setDisabled(True)
-      self.Bot_stop.setDisabled(False)
-      self.setting_sendPort.setDisabled(True)
-      self.setting_listenPort.setDisabled(True)
-      self.setting_botSelectfile.setDisabled(True)
-      self.setting_botFilepath.setDisabled(True)
+      if os.path.exists(settings["bot"]["botFilepath"]):
+        botState=1
+        botQueue.put("#cls")
+        self.setting_savePort.setDisabled(True)
+        self.setting_logout.setDisabled(True)
+        self.Bot_start.setDisabled(True)
+        self.Bot_stop.setDisabled(False)
+        self.setting_sendPort.setDisabled(True)
+        self.setting_listenPort.setDisabled(True)
+        self.setting_botSelectfile.setDisabled(True)
+        self.setting_botFilepath.setDisabled(True)
+      else:
+        QMessageBox.information(
+          self,
+          "Dylan",
+          "启动文件不存在",
+          QMessageBox.Yes
+        )
     elif type==2 and botState==1:
       closeBot()
       time.sleep(0.1)
@@ -312,7 +327,26 @@ class gui(QWidget,Ui_MainWindow):
       self.setting_botSelectfile.setDisabled(False)
       self.setting_botFilepath.setDisabled(False)
       botState=0
-
+    elif type==3 and botState!=1:
+      botFilepath=os.path.split(settings["bot"]["botFilepath"])[0]
+      if os.path.exists(os.path.join(botFilepath,"device.json")):
+        os.remove(os.path.join(botFilepath,"device.json"))
+      if os.path.exists(os.path.join(botFilepath,"session.token")):
+        os.remove(os.path.join(botFilepath,"session.token"))
+      try:
+        rmtree(os.path.join(botFilepath,"data"))
+      except:
+        pass
+      try:
+        rmtree(os.path.join(botFilepath,"logs"))
+      except:
+        pass
+      QMessageBox.information(
+      self,
+      "Dylan",
+      "删除成功！",
+      QMessageBox.Yes
+      )
 
   def selectFile(self,area=int):
     '''选择启动文件'''
@@ -382,8 +416,6 @@ class gui(QWidget,Ui_MainWindow):
     else:
       closeBot()
       event.accept()
-
-
 
 class Functions(QObject):
   '''QtWeb通信模块'''
@@ -504,8 +536,7 @@ def componentInformation():
         "msg":{
           "groupList":groupList,
           "permissionList":permissionList,
-          "givePermissionToAllAdmin":forms["setting"]["msg"]["givePermissionToAllAdmin"].isChecked(),
-          "outputMsgToLog":forms["setting"]["msg"]["outputMsgToLog"].isChecked()
+          "givePermissionToAllAdmin":forms["setting"]["msg"]["givePermissionToAllAdmin"].isChecked()
         },
         "Dylan":{
           "enableUpdate":forms["setting"]["Dylan"]["enableUpdate"].isChecked(),
@@ -626,13 +657,13 @@ def server():
 
 def outputCommand(command):
   '''将指令输出至bds和控制台'''
-  global serverProcess
+  global serverProcess,settings
   try:
     serverProcess.stdin.write(command+"\n")
   except:
     pass
-  logQueue.put(">"+command)
-
+  if settings["console"]["outputCommandToConsole"]:
+    logQueue.put(">"+command)
 
 def outputRecognition(log):
   '''处理输入前缀和颜色代码'''
@@ -669,14 +700,10 @@ def startBot():
   global botState,botProcess,forms,settings
   while True:
     time.sleep(1)
-    botStarted=0
     if forms=="":
       continue
-    if botState==1 and botStarted==0:
-      if not os.path.exists(settings["bot"]["botFilepath"]):
-        botState==0
-        continue
-      botStarted=1
+    if botState==1:
+
       with open(os.path.join(selfPath,"go-cqhttp.bat"), 'w',encoding='utf-8')as bat:
         bat.write("chcp 65001\ncd "+os.path.split(settings["bot"]["botFilepath"])[0]+"\necho.#cls\n"+settings["bot"]["botFilepath"])
       botProcess=subprocess.Popen(
@@ -753,7 +780,7 @@ httpServer = Flask(__name__)
 
 @httpServer.route('/', methods=["POST"])
 def post_data():
-
+  global settings
   if request.get_json().get("meta_event_type") == 'heartbeat':
     global qq,MessageReceived,MessageSent
     qq=request.get_json().get("self_id")
@@ -762,8 +789,30 @@ def post_data():
     return 'ok'
   elif request.get_json().get('message_type') == 'private' or request.get_json().get('message_type') == 'group':
     regQueue.put(request.get_json())
+    if settings["bot"]["enableOutputMsgToLog"]:
+      with open(os.path.join(selfPath,"log",f"msg-{datetime.date.today()}.csv"),"a") as csv:
+        writeList=[
+          time.time(),
+          datetime.datetime.now().time(),
+          request.get_json().get('message_type'),
+          request.get_json().get('sender').get('nickname'),
+          request.get_json().get('user_id'),
+          request.get_json().get('group_id'),
+          request.get_json().get('sub_type'),
+          request.get_json().get('raw_message'),
+          request.get_json()
+        ]
+        text=""
+        for i in writeList:
+          i=str(i).replace('"','""')
+          if i==None or i == "None":
+            i=""
+          elif text=="":
+            text=i
+          else:
+            text=f'{text},"{i}"'
+        csv.write(text+"\n")
     return 'ok'
-
 
 def runHttp():
   if settings.get("bot") is None:
@@ -773,6 +822,30 @@ def runHttp():
   else:
     port=settings["bot"]["listenPort"]
   httpServer.run(host='127.0.0.1', port=port)
+
+def getVersion():
+  '''获取新版本'''
+  global settings,newVersion
+  while True:
+    time.sleep(1)
+    try:
+      if settings["Dylan"]["enableUpdate"]:
+        versionJson=json.loads(requests.request(method="GET",url="https://api.github.com/repos/Zaiton233/Dylan/releases").text)
+        if newVersion!=versionJson[0]["name"] and VERSION!=versionJson[0]["name"]:
+          newVersion=versionJson[0]["name"]
+          body=versionJson[0]["body"].replace("\r","")
+          time.sleep(3)
+          win32api.MessageBox(
+            0,
+            f'{versionJson[0]["name"]}\n发布日期：{versionJson[0]["published_at"]}\n\n更新内容：\n{body}',
+            "Dylan - 发现新版本",
+            win32con.MB_OK
+          )
+      else:
+        newVersion=None
+      time.sleep(100)
+    except:
+      pass
 
 def mainGui():
   '''主窗口'''
@@ -786,9 +859,9 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.7 pre"
+  VERSION="Alpha 1.7.20220313"
+  newVersion=None
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
-  print("I Run at",selfPath)
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")
   logQueue=queue.Queue(maxsize=0)
@@ -816,7 +889,8 @@ if __name__=="__main__":
   if not os.path.exists(os.path.join(selfPath,"console.html")):
     print("console.html文件不存在")
     exit(input())
-
+  if not os.path.exists(os.path.join(selfPath,"log")):
+    os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)
   getComponentInformation.start()
   serverThread=threading.Thread(target=startServer,daemon=True)
@@ -829,4 +903,6 @@ if __name__=="__main__":
   botThread.start()
   msgThread=threading.Thread(target=lambda:messageProcessing(regQueue,commandQueue),daemon=True)
   msgThread.start()
+  getVersionThread=threading.Thread(target=getVersion,daemon=True)
+  getVersionThread.start()
   mainGui()
