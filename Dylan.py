@@ -816,9 +816,9 @@ def post_data():
 
 def runHttp():
   if settings.get("bot") is None:
-    port=5700
+    port=8000
   elif settings.get("bot").get("listenPort") is None:
-    port=5700
+    port=8000
   else:
     port=settings["bot"]["listenPort"]
   httpServer.run(host='127.0.0.1', port=port)
