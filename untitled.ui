@@ -935,7 +935,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-277</y>
          <width>800</width>
          <height>710</height>
         </rect>
@@ -1301,7 +1301,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>输出执行的命令输出到控制台</string>
+          <string>输出执行的命令到控制台</string>
          </property>
         </widget>
        </widget>
@@ -1452,23 +1452,14 @@
           <string>公告</string>
          </property>
         </widget>
-        <widget class="QPushButton" name="setting_clearLogs">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+        <widget class="QPushButton" name="setting_reset">
          <property name="geometry">
           <rect>
            <x>210</x>
            <y>80</y>
-           <width>61</width>
+           <width>81</width>
            <height>31</height>
           </rect>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
          </property>
          <property name="text">
           <string>重置设置</string>
@@ -1520,7 +1511,7 @@
           <rect>
            <x>210</x>
            <y>40</y>
-           <width>61</width>
+           <width>81</width>
            <height>31</height>
           </rect>
          </property>
@@ -1536,6 +1527,63 @@
      <attribute name="title">
       <string>关于</string>
      </attribute>
+     <widget class="QLabel" name="about_Dylan">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>40</y>
+        <width>661</width>
+        <height>91</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>等线</family>
+        <pointsize>48</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Dylan</string>
+      </property>
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="about_info">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>170</y>
+        <width>751</width>
+        <height>251</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a name=&quot;main&quot;/&gt;界面&amp;amp;功能参考 : &lt;a href=&quot;https://mcsmanager.com/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;MCSManager&lt;/span&gt;&lt;/a&gt; , &lt;a href=&quot;https://www.minebbs.com/threads/bds-naive.4860/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;Naive&lt;/span&gt;&lt;/a&gt; , &lt;a href=&quot;https://www.minebbs.com/resources/zeroclear.1820/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;ZeroClear&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;机器人功能支持 : &lt;a href=&quot;https://github.com/Mrs4s/go-cqhttp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;https://github.com/Mrs4s/go-cqhttp&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;爱发电 : &lt;a href=&quot;https://afdian.net/@Zaiton&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;https://afdian.net/@Zaiton&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;最新版下载 : &lt;a href=&quot;http://github.com/Zaiton233/Dylan/releases&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;https://github.com/Zaiton233/Dylan/releases&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Github : &lt;a href=&quot;https://github.com/Zaiton233/Dylan&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;https://github.com/Zaiton233/Dylan&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;帮助&amp;amp;介绍文档 : &lt;a href=&quot;https://docs.qq.com/doc/p/843b94ec1a19c9592dbcccc7b289e688013e05fc?dver=3.0.27447048&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;腾讯文档-Dylan&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;讨论群 ： &lt;a href=&quot;https://jq.qq.com/?_wv=1027&amp;amp;k=XNZqPSPv&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2d94a7;&quot;&gt;954829203&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p align=&quot;center&quot;&gt;Copyright © 2022 Zaiton233. All Rights Reserved. &lt;br/&gt;向着光，才能一直往前走。 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="about_logo">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>80</width>
+        <height>80</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

@@ -17,7 +17,7 @@ from flask import Flask, request
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QPoint, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette
+from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette,QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -28,7 +28,7 @@ class gui(QWidget,Ui_MainWindow):
     '''主窗口设置'''
     super(gui, self).__init__(parent)
     self.setupUi(self)
-    global consolePath,forms,datas
+    global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan_"+VERSION)
     self.tabWidget.setCurrentIndex(0)
@@ -39,6 +39,9 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_stop.setDisabled(True)
     self.Panel_forcestop.setDisabled(True)
     self.Bot_stop.setDisabled(True)
+    self.about_logo.setPixmap(QPixmap(icoPath))
+    self.about_logo.setScaledContents(True)
+    self.about_Dylan.setText("Dylan "+VERSION.split(' ',1)[0])
     forms={
       "self":self,
       "bot":{
@@ -144,13 +147,13 @@ class gui(QWidget,Ui_MainWindow):
     self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
     self.setting_logout.clicked.connect(lambda: self.botControl(3))
     self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
+    self.setting_reset.clicked.connect(self.reset)
     self.setting_savePort.clicked.connect(lambda:self.savePort())
     self.Panel_start.clicked.connect(lambda: self.serverControl(1))
     self.Panel_stop.clicked.connect(lambda: self.serverControl(2))
     self.Bot_start.clicked.connect(lambda: self.botControl(1))
     self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
-
 
   def savePort(self):
     '''保存端口'''
@@ -168,6 +171,33 @@ class gui(QWidget,Ui_MainWindow):
       info,
       QMessageBox.Yes
     )
+
+  def reset(self):
+    '''重置设置'''
+    global stopSavingSetting,serverState,selfPath
+    reply = QMessageBox.warning(
+      self,
+      'Dylan',
+      "确定重置所有设置吗？\n他们将会永远失去！（真的很久！）\n\n确定重置后将自动退出程序，默认设置将在下一次启动时应用",
+      QMessageBox.Yes | QMessageBox.No,
+      QMessageBox.No
+      )
+    if reply == QMessageBox.Yes:
+      if serverState==1:
+        QMessageBox.information(
+          self,
+          "Dylan",
+          "服务器未关闭，重置已取消",
+          QMessageBox.Yes
+        )
+      else:
+        stopSavingSetting=True
+        MainWindow.setDisabled(True)
+        closeBot()
+        time.sleep(1)
+        with open(os.path.join(selfPath,"setting.json"), 'w',encoding='utf-8') as jsonFile:
+          jsonFile.write("{}")
+        exit()
 
   def setThemes(self,themeId):
     '''设置主题'''
@@ -473,7 +503,6 @@ def componentInformation():
       rows=forms["regularlist"].rowCount()
       if rows>0:
         for singleRow in range(rows):
-          # print(singleRow,rows)
           if forms["regularlist"].item(singleRow,1):
             regular=forms["regularlist"].item(singleRow,1).text()
           else:
@@ -509,6 +538,8 @@ def componentInformation():
 
       groupList=[]
       permissionList=[]
+      if stopSavingSetting:
+        continue
       for text in forms["setting"]["msg"]["groupList"].toPlainText().split("\n"):
         if  re.search('^[\d]{6,16}$',text) and text!="":
           groupList.append(int(text))
@@ -697,6 +728,7 @@ def colorLog(log):
   return log
 
 def startBot():
+  '''机器人启动程序'''
   global botState,botProcess,forms,settings
   while True:
     time.sleep(1)
@@ -725,7 +757,6 @@ def startBot():
         if log.find("登录成功")>0 :
           forms["bot"]["state"].setText("运行中")
         if not re.search('^[\n\s\r]+?$',log) and log!="":
-          # print(log.replace("\n",""))
           log=outputRecognition(log)
           log=escapeLog(log)
           log=colorLog(log)
@@ -738,6 +769,7 @@ def startBot():
         break
 
 def startServer():
+  '''服务器启动程序'''
   global serverState
   _serverState=0
   while True:
@@ -759,7 +791,6 @@ def startServer():
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
   global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
-
   while True:
     time.sleep(1)
     try:
@@ -780,6 +811,7 @@ httpServer = Flask(__name__)
 
 @httpServer.route('/', methods=["POST"])
 def post_data():
+  '''数据包接收处理'''
   global settings
   if request.get_json().get("meta_event_type") == 'heartbeat':
     global qq,MessageReceived,MessageSent
@@ -815,6 +847,7 @@ def post_data():
     return 'ok'
 
 def runHttp():
+  '''运行http服务器'''
   if settings.get("bot") is None:
     port=8000
   elif settings.get("bot").get("listenPort") is None:
@@ -831,7 +864,7 @@ def getVersion():
     try:
       if settings["Dylan"]["enableUpdate"]:
         versionJson=json.loads(requests.request(method="GET",url="https://api.github.com/repos/Zaiton233/Dylan/releases").text)
-        if newVersion!=versionJson[0]["name"] and VERSION!=versionJson[0]["name"]:
+        if newVersion!=versionJson[0]["name"] and VERSION!=versionJson[0]["name"] and not versionJson[0]["draft"]:
           newVersion=versionJson[0]["name"]
           body=versionJson[0]["body"].replace("\r","")
           time.sleep(3)
@@ -859,8 +892,9 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.7.20220313"
+  VERSION="Alpha 1.7.20220313.2"
   newVersion=None
+  stopSavingSetting=False
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
   consolePath=os.path.join(selfPath,"console.html")
   icoPath=os.path.join(selfPath,"ico.png")

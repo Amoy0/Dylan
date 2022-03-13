@@ -6,6 +6,7 @@ from queue import *
 import requests
 
 def messageProcessing(regQueue=Queue,commandQueue=Queue):
+  '''消息处理'''
   global datas,settings
   while True:
     if "regQueue" not in dir():
@@ -44,7 +45,7 @@ def messageProcessing(regQueue=Queue,commandQueue=Queue):
       time.sleep(0.1)
 
 def reply(settings,item,datas,commandQueue):
-  url="http://127.0.0.1:{0}/send_group_msg?group_id={1}&message={2}&auto_escape=false"
+  '''回复处理'''
   target=None
   detailCommand=None
   executionContent=None
@@ -84,6 +85,7 @@ def reply(settings,item,datas,commandQueue):
   print([detailCommand,target,executionContent])
 
 def textProcessing(text,record,content):
+  '''文本匹配处理'''
   for i in range(len(re.findall(record["regular"],content))):
     if type(re.findall(record["regular"],content)[i])==tuple:
       for j in range(len(re.findall(record["regular"],content)[0])):
