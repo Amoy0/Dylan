@@ -73,7 +73,6 @@ class gui(QWidget,Ui_MainWindow):
         "start":{
           "selectfile":self.setting_selectfile,
           "filepath":self.setting_filepath,
-          "compatibilityMode":self.setting_compatibilityMode,
           "autoRestart":self.setting_autoRestart
         },
         "bot":{
@@ -145,19 +144,32 @@ class gui(QWidget,Ui_MainWindow):
     else:
       self.pluginsPath=None
     if self.pluginsPath!=None:
-      self.pluginList.clear()
+      total=0
+      enabled=0
+      disabled=0
       time.sleep(0.05)
       font = QFont()
-      font.setItalic(True)
+      font.setFamily("宋体")
+      font.setPointSize(10)
+      self.pluginList.clear()
       for f in os.listdir(self.pluginsPath):
         if f.endswith((".dll",".js",".lua",".py",".jar")):
-          self.pluginList.addItem(f)
+          total+=1
+          enabled+=1
+          font.setItalic(False)
+          item = QtWidgets.QListWidgetItem()
+          item.setText(f)
+          item.setFont(font)
+          self.pluginList.addItem(item)
         elif f[:-2].endswith((".dll",".js",".lua",".py",".jar")) and f[-2:]==".d":
+          total+=1
+          disabled+=1
+          font.setItalic(True)
           item = QtWidgets.QListWidgetItem()
           item.setText("*已禁用 "+f[:-2])
           item.setFont(font)
           self.pluginList.addItem(item)
-      self.pluginList.sortItems()
+      self.plugins_total.setText(f"共{total}个插件，其中{enabled}个已启用，{disabled}个已禁用")
 
   def setHtml(self,theme):
     '''设置控制台主题'''
@@ -182,6 +194,7 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_input.returnPressed.connect(self.transferCommand)
 
   def createPluginMenu(self,pos):
+    global serverState
     row = self.pluginList.currentRow()
     self.pluginMenu = QMenu(self.pluginList)
     self.addPlugin = QAction('导入插件',self.pluginList)
@@ -202,6 +215,11 @@ class gui(QWidget,Ui_MainWindow):
     if row==-1 or self.pluginList.itemAt(pos)==None:
       self.removePlugin.setDisabled(True)
       self.disablePlugin.setDisabled(True)
+    if serverState==1:
+      self.removePlugin.setDisabled(True)
+      self.disablePlugin.setDisabled(True)
+      self.addPlugin.setDisabled(True)
+
     self.addPlugin.triggered.connect(lambda: self.pluginManagement(1))
     self.removePlugin.triggered.connect(lambda: self.pluginManagement(2,self.pluginList.itemAt(pos)))
     self.refreshPlugin.triggered.connect(lambda: self.loadPlugins())
@@ -210,7 +228,6 @@ class gui(QWidget,Ui_MainWindow):
     self.pluginMenu.popup(QCursor.pos())
 
   def pluginManagement(self,type,item=None):
-    print(type)
     if type==1:
       importFile=QFileDialog.getOpenFileName(self, "选择文件",self.pluginsPath, "插件 (*.dll *.js *.lua *.py *.jar)")
       if importFile[0]!='':
@@ -231,16 +248,24 @@ class gui(QWidget,Ui_MainWindow):
           )
         self.loadPlugins()
     elif type==2 and self.pluginsPath!=None:
+      
+      if item.text()[0]=="*":
+        fileName=item.text()[5:]
+      else:
+        fileName=item.text()
       reply = QMessageBox.warning(
       self,
       'Dylan',
-      f'确定删除"{item.text()}"？\n他将会永远失去！（真的很久！）',
+      f'确定删除"{fileName}"？\n他将会永远失去！（真的很久！）',
       QMessageBox.Yes | QMessageBox.No,
       QMessageBox.No
       )
       if reply == QMessageBox.Yes:
         try:
-          os.remove(os.path.join(self.pluginsPath,item.text()))
+          if item.text()[0]=="*":
+            os.remove(os.path.join(self.pluginsPath,fileName+".d"))
+          else:
+            os.remove(os.path.join(self.pluginsPath,item.text()))
           QMessageBox.information(
             self,
             "Dylan",
@@ -418,7 +443,7 @@ class gui(QWidget,Ui_MainWindow):
 
   def serverControl(self,type):
     '''服务器控制按钮'''
-    global serverState,commandQueue
+    global serverState,commandQueue,restart
     if type==1 and serverState!=1:
       while not commandQueue.empty():
         commandQueue.get()
@@ -435,6 +460,7 @@ class gui(QWidget,Ui_MainWindow):
         self.Panel_stop.setDisabled(False)
         self.Panel_input.setDisabled(False)
     elif type==2:
+      restart=False
       outputCommand("stop")
 
   def botControl(self,type):
@@ -505,6 +531,7 @@ class gui(QWidget,Ui_MainWindow):
       startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "启动文件 (*.exe *.bat *.cmd)")
       if startFile[0]!='':
         self.setting_filepath.setText(startFile[0])
+      self.loadPlugins()
     elif area==1:
       startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "go-cqhttp (go-cqhttp_windows_arm64.exe go-cqhttp_windows_amd64.exe)")
       if startFile[0]!='':
@@ -556,8 +583,8 @@ class gui(QWidget,Ui_MainWindow):
 
   def closeEvent(self, event):
     '''关闭事件'''
-    global serverProcess,state
-    if serverState==1:
+    global serverProcess,serverState,restart
+    if serverState==1 or restart:
       event.ignore()
       QMessageBox.information(self,
         "Dylan",
@@ -598,7 +625,7 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas,sendPort,listenPort,settings
+  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished
   UiFinished=False
   while True:
     time.sleep(1)
@@ -671,7 +698,6 @@ def componentInformation():
         "type":"settings",
         "start":{
           "filepath":forms["setting"]["start"]["filepath"].text(),
-          "compatibilityMode":forms["setting"]["start"]["compatibilityMode"].isChecked(),
           "autoRestart":forms["setting"]["start"]["autoRestart"].isChecked()
         },
         "bot":{
@@ -710,16 +736,16 @@ def componentInformation():
 
 def server():
   '''服务器输出读取和状态监控'''
-  global serverProcess,serverState,forms,commandQueue
+  global serverProcess,serverState,forms,commandQueue,restart
   forms["setting"]["start"]["selectfile"].setDisabled(True)
   forms["setting"]["start"]["filepath"].setDisabled(True)
-  forms["setting"]["start"]["compatibilityMode"].setDisabled(True)
   serverState=1
   serverProcess=subprocess.Popen(
     forms["setting"]["start"]["filepath"].text(),
     stdout=subprocess.PIPE,
     stdin=subprocess.PIPE,
     universal_newlines=True,
+    cwd=os.path.split(forms["setting"]["start"]["filepath"].text())[0],
     bufsize=1,
     encoding="UTF-8"
     )
@@ -732,72 +758,80 @@ def server():
       log=serverProcess.stdout.readline()
     except:
       serverState=0
-    if log!=None:
+    if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
       log=outputRecognition(log)
       regQueue.put({
         "log":log,
         "type":"console"
       })
-      if not re.search('^[\n\s\r]+?$',log) and log!="":
-        if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
-          forms["panel"]["version"].setText(version[:10])
-          forms["panel"]["gamemode"].setText(gamemode)
-          forms["panel"]["difficulty"].setText(difficulty)
-          forms["panel"]["state"].setText("已启动")
-          forms["panel"]["levelname"].setText(levelname[:20])
-          forms["panel"]["port"].setText(ipv4+" /"+ipv6)
-          started=1
-        if started==0:
-          if log.find("Version")>0:
-            version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log)
-          elif log.find("Game mode")>0 :
-            if log.find("Survival")>0:
-              gamemode="生存"
-            elif log.find("Creative")>0:
-              gamemode="创造"
-            else:
-              gamemode="冒险"
-          elif log.find("Difficulty")>0:
-            if log.find("PEACEFUL")>0:
-              difficulty="和平"
-            elif log.find("EASY")>0:
-              difficulty="简单"
-            elif log.find("NORMAL")>0:
-              difficulty="普通"
-            else:
-              difficulty="困难"
-          elif log.find("Level Name")>0:
-            levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log)
-          elif log.find("IPv4")>0:
-            ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
-          elif log.find("IPv6")>0:
-            ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
-          forms["panel"]["state"].setText("启动中")
-        log=escapeLog(log)
-        if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
-          log=colorLog(log)
-        logQueue.put(log)
-    if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or serverState==0:
+      if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
+        forms["panel"]["version"].setText(version[:10])
+        forms["panel"]["gamemode"].setText(gamemode)
+        forms["panel"]["difficulty"].setText(difficulty)
+        forms["panel"]["state"].setText("已启动")
+        forms["panel"]["levelname"].setText(levelname[:20])
+        forms["panel"]["port"].setText(ipv4+" /"+ipv6)
+        started=1
+      if started==0:
+        if log.find("Version")>0:
+          version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log)
+        elif log.find("Game mode")>0 :
+          if log.find("Survival")>0:
+            gamemode="生存"
+          elif log.find("Creative")>0:
+            gamemode="创造"
+          else:
+            gamemode="冒险"
+        elif log.find("Difficulty")>0:
+          if log.find("PEACEFUL")>0:
+            difficulty="和平"
+          elif log.find("EASY")>0:
+            difficulty="简单"
+          elif log.find("NORMAL")>0:
+            difficulty="普通"
+          else:
+            difficulty="困难"
+        elif log.find("Level Name")>0:
+          levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log)
+        elif log.find("IPv4")>0:
+          ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
+        elif log.find("IPv6")>0:
+          ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
+        forms["panel"]["state"].setText("启动中")
+      log=escapeLog(log)
+      if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
+        log=colorLog(log)
+      logQueue.put(log)
+    try:
+      psutil.Process(serverProcess.pid)
+    except:
+      if settings["start"]["autoRestart"]:
+        restart=True
       serverState=0
-      logQueue.put("--------------------")
-      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]进程已退出"))
-      time.sleep(0.05)
-      forms["panel"]["port"].setText("- / -")
-      forms["panel"]["levelname"].setText("-")
-      forms["panel"]["difficulty"].setText("-")
-      forms["panel"]["gamemode"].setText("-")
-      forms["panel"]["state"].setText("未启动")
-      forms["panel"]["version"].setText("-")
-      forms["panel"]["input"].setText("")
-      forms["panel"]["input"].setDisabled(True)
-      forms["panel"]["start"].setDisabled(False)
-      forms["panel"]["restart"].setDisabled(True)
-      forms["panel"]["stop"].setDisabled(True)
-      forms["panel"]["forcestop"].setDisabled(True)
-      forms["setting"]["start"]["selectfile"].setDisabled(False)
-      forms["setting"]["start"]["filepath"].setDisabled(False)
-      forms["setting"]["start"]["compatibilityMode"].setDisabled(False)
-      break
+    finally:
+      if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or serverState==0 or log.find("exit")>0:
+        serverState=0
+        logQueue.put("<br>")
+        logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程已退出"))
+        time.sleep(0.05)
+        forms["panel"]["port"].setText("- / -")
+        forms["panel"]["levelname"].setText("-")
+        forms["panel"]["difficulty"].setText("-")
+        forms["panel"]["gamemode"].setText("-")
+        forms["panel"]["state"].setText("未启动")
+        forms["panel"]["version"].setText("-")
+        forms["panel"]["input"].setText("")
+        forms["panel"]["input"].setDisabled(True)
+        if restart:
+          break
+        forms["panel"]["start"].setDisabled(False)
+        forms["panel"]["restart"].setDisabled(True)
+        forms["panel"]["stop"].setDisabled(True)
+        forms["panel"]["forcestop"].setDisabled(True)
+        forms["setting"]["start"]["selectfile"].setDisabled(False)
+        forms["setting"]["start"]["filepath"].setDisabled(False)
+        break
+    
     try:
       if not MainWindow.isVisible():
         serverProcess.stdin.write("stop\n")
@@ -856,7 +890,6 @@ def startBot():
     if forms=="":
       continue
     if botState==1:
-
       with open(os.path.join(selfPath,"go-cqhttp.bat"), 'w',encoding='utf-8')as bat:
         bat.write("chcp 65001\ncd "+os.path.split(settings["bot"]["botFilepath"])[0]+"\necho.#cls\n"+settings["bot"]["botFilepath"])
       botProcess=subprocess.Popen(
@@ -891,22 +924,33 @@ def startBot():
 
 def startServer():
   '''服务器启动程序'''
-  global serverState
-  _serverState=0
+  global serverState,restart
   while True:
-    if serverState==1 and _serverState==0:
-      _serverState=1
-      server()
-      _serverState=0
-    if serverState==1 or _serverState==1:
-      try:
-        if not MainWindow.isVisible():
-          serverProcess.stdin.write("stop\n")
-          break
-      except:
-        serverProcess.stdin.write("stop\n")
-        break
     time.sleep(0.5)
+    if not UiFinished:
+      continue
+    try:
+      if not MainWindow.isVisible():
+        break
+    except:
+      break
+    if forms!="" and not restart and serverState!=1:
+      forms["panel"]["start"].setDisabled(False)
+      forms["panel"]["restart"].setDisabled(True)
+      forms["panel"]["stop"].setDisabled(True)
+      forms["panel"]["forcestop"].setDisabled(True)
+      forms["setting"]["start"]["selectfile"].setDisabled(False)
+      forms["setting"]["start"]["filepath"].setDisabled(False)
+    if restart:
+      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器将在5s后重启…"))
+      for i in range(10):
+        time.sleep(0.5)
+        if not restart:
+          logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]重启已取消"))
+          break
+    if serverState==1 or restart:
+      restart=False
+      server()
   exit()
 
 def statusMonitoring():
@@ -1014,11 +1058,12 @@ if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
   VERSION="Alpha 1.8 pre"
+  restart=False
   newVersion=None
   stopSavingSetting=False
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
-  consolePath=os.path.join(selfPath,"console.html")
-  icoPath=os.path.join(selfPath,"ico.png")
+  consolePath=os.path.join(selfPath,"attachment","console.html")
+  icoPath=os.path.join(selfPath,"attachment","ico.png")
   logQueue=queue.Queue(maxsize=0)
   botQueue=queue.Queue(maxsize=0)
   regQueue=queue.Queue(maxsize=0)
@@ -1032,7 +1077,10 @@ if __name__=="__main__":
     datas={}
   else:
     with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8') as jsonFile:
-      datas=json.load(jsonFile)
+      try:
+        datas=json.load(jsonFile)
+      except:
+        datas={}
   if not os.path.exists(os.path.join(selfPath,"setting.json")):
     settings={}
   else:
@@ -1041,9 +1089,9 @@ if __name__=="__main__":
         settings=json.load(jsonFile)
       except:
         settings={}
-  if not os.path.exists(os.path.join(selfPath,"console.html")):
+  if not os.path.exists(consolePath):
     print("console.html文件不存在")
-    exit(input())
+    exit()
   if not os.path.exists(os.path.join(selfPath,"log")):
     os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)

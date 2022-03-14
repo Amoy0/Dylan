@@ -666,7 +666,7 @@
         <x>10</x>
         <y>10</y>
         <width>771</width>
-        <height>391</height>
+        <height>381</height>
        </rect>
       </property>
       <property name="contextMenuPolicy">
@@ -719,7 +719,7 @@
         <x>10</x>
         <y>10</y>
         <width>771</width>
-        <height>391</height>
+        <height>381</height>
        </rect>
       </property>
       <property name="font">
@@ -736,6 +736,19 @@
       </property>
       <property name="spacing">
        <number>1</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="plugins_total">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>400</y>
+        <width>591</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>共0个插件</string>
       </property>
      </widget>
     </widget>
@@ -953,8 +966,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>796</width>
-        <height>450</height>
+        <width>797</width>
+        <height>448</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -969,7 +982,7 @@
          <x>0</x>
          <y>0</y>
          <width>800</width>
-         <height>710</height>
+         <height>700</height>
         </rect>
        </property>
        <widget class="QGroupBox" name="setting_start">
@@ -978,7 +991,7 @@
           <x>10</x>
           <y>10</y>
           <width>761</width>
-          <height>121</height>
+          <height>101</height>
          </rect>
         </property>
         <property name="title">
@@ -1038,30 +1051,11 @@
           <string>选择文件</string>
          </property>
         </widget>
-        <widget class="QCheckBox" name="setting_compatibilityMode">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+        <widget class="QCheckBox" name="setting_autoRestart">
          <property name="geometry">
           <rect>
            <x>20</x>
            <y>70</y>
-           <width>591</width>
-           <height>21</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>兼容启动模式（使用嵌套批处理文件开服 若出现服务器启动失败可尝试开启此选项）</string>
-         </property>
-        </widget>
-        <widget class="QCheckBox" name="setting_autoRestart">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>90</y>
            <width>161</width>
            <height>16</height>
           </rect>
@@ -1075,7 +1069,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>240</y>
+          <y>220</y>
           <width>761</width>
           <height>131</height>
          </rect>
@@ -1261,7 +1255,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>140</y>
+          <y>120</y>
           <width>761</width>
           <height>91</height>
          </rect>
@@ -1341,7 +1335,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>380</y>
+          <y>360</y>
           <width>761</width>
           <height>171</height>
          </rect>
@@ -1419,7 +1413,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>560</y>
+          <y>540</y>
           <width>761</width>
           <height>131</height>
          </rect>

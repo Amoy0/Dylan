@@ -38,8 +38,8 @@ def messageProcessing(regQueue=Queue,commandQueue=Queue):
             reply(settings,item,datas["regular"]["private_admin"],commandQueue)
           else:
             reply(settings,item,datas["regular"]["private"],commandQueue)
-      except Exception:
-        print(Exception)
+      except Exception as e:
+        print(e)
         pass
     else:
       time.sleep(0.1)
@@ -53,36 +53,37 @@ def reply(settings,item,datas,commandQueue):
     content=item.get("raw_message")
   elif item.get("log")!=None:
     content=item.get("log")
-  for record in datas:
-    if not re.search(record["regular"],content):
-      continue
-    command=record["command"].split("|",1)
-    if len(command)<=1:
-      continue
-    detailCommand=command[0].upper()
-    executionContent=textProcessing(command[1],record,content)
-    if detailCommand[0]=="G" and settings["msg"]["groupList"]!=[]:
-      if len(detailCommand)==1:
-        target=item.get("group_id")
-      elif re.search("^\d+?$",detailCommand[2:]):
-        target=detailCommand[2:]
-      else:
+  if not re.search('^[\n\s\r]+?$',content):
+    for record in datas:
+      if not re.search(record["regular"],content):
         continue
-      requests.get(f'http://127.0.0.1:{settings["bot"]["sendPort"]}/send_group_msg?group_id={target}&message={executionContent}&auto_escape=false')
-    elif detailCommand[0]=="P":
-      if len(detailCommand)==1:
-        target=item.get("user_id")
-      elif re.search("^\d+?$",detailCommand[2:]):
-        target=detailCommand[2:]
-      else:
+      command=record["command"].split("|",1)
+      if len(command)<=1:
         continue
-      requests.get(f'http://127.0.0.1:{settings["bot"]["sendPort"]}/send_msg?message_type=private&user_id={target}&message={executionContent}&auto_escape=false')
+      detailCommand=command[0].upper()
+      executionContent=textProcessing(command[1],record,content)
+      if detailCommand[0]=="G" and settings["msg"]["groupList"]!=[]:
+        if len(detailCommand)==1:
+          target=item.get("group_id")
+        elif re.search("^\d+?$",detailCommand[2:]):
+          target=detailCommand[2:]
+        else:
+          continue
+        requests.get(f'http://127.0.0.1:{settings["bot"]["sendPort"]}/send_group_msg?group_id={target}&message={executionContent}&auto_escape=false')
+      elif detailCommand[0]=="P":
+        if len(detailCommand)==1:
+          target=item.get("user_id")
+        elif re.search("^\d+?$",detailCommand[2:]):
+          target=detailCommand[2:]
+        else:
+          continue
+        requests.get(f'http://127.0.0.1:{settings["bot"]["sendPort"]}/send_msg?message_type=private&user_id={target}&message={executionContent}&auto_escape=false')
 
-    elif detailCommand=="C":
-      commandQueue.put(executionContent)
-    elif detailCommand=="CMD":
-      os.system(executionContent)
-  print([detailCommand,target,executionContent])
+      elif detailCommand=="C":
+        commandQueue.put(executionContent)
+      elif detailCommand=="CMD":
+        os.system(executionContent)
+    print([content,detailCommand,target,executionContent])
 
 def textProcessing(text,record,content):
   '''文本匹配处理'''
