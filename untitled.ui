@@ -46,6 +46,8 @@
      <font>
       <family>宋体</family>
       <pointsize>10</pointsize>
+      <underline>false</underline>
+      <strikeout>false</strikeout>
      </font>
     </property>
     <property name="currentIndex">
@@ -707,6 +709,36 @@
       </column>
      </widget>
     </widget>
+    <widget class="QWidget" name="plugins">
+     <attribute name="title">
+      <string>插件管理</string>
+     </attribute>
+     <widget class="QListWidget" name="pluginList">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>771</width>
+        <height>391</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>宋体</family>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="spacing">
+       <number>1</number>
+      </property>
+     </widget>
+    </widget>
     <widget class="QWidget" name="Bot">
      <attribute name="title">
       <string>Bot</string>
@@ -935,7 +967,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-277</y>
+         <y>0</y>
          <width>800</width>
          <height>710</height>
         </rect>

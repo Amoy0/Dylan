@@ -3,7 +3,7 @@ import json
 import os
 import queue
 import re
-from shutil import rmtree
+import shutil
 import subprocess
 import sys
 import threading
@@ -17,7 +17,7 @@ from flask import Flask, request
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QPoint, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette,QPixmap
+from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette,QPixmap,QFont
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -42,6 +42,7 @@ class gui(QWidget,Ui_MainWindow):
     self.about_logo.setPixmap(QPixmap(icoPath))
     self.about_logo.setScaledContents(True)
     self.about_Dylan.setText("Dylan "+VERSION.split(' ',1)[0])
+    self.pluginList.setSpacing(2)
     forms={
       "self":self,
       "bot":{
@@ -102,6 +103,7 @@ class gui(QWidget,Ui_MainWindow):
       }
     self.loadSetting()
     self.loadRegular()
+    self.loadPlugins()
     self.connectFunctions()
 
   def loadSetting(self):
@@ -134,6 +136,29 @@ class gui(QWidget,Ui_MainWindow):
     sendPort=self.setting_sendPort.value()
     self.setThemes(self.setting_chosenTheme.currentIndex())
 
+  def loadPlugins(self):
+    '''加载插件'''
+    if os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")):
+      self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")
+    elif os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")):
+      self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")
+    else:
+      self.pluginsPath=None
+    if self.pluginsPath!=None:
+      self.pluginList.clear()
+      time.sleep(0.05)
+      font = QFont()
+      font.setItalic(True)
+      for f in os.listdir(self.pluginsPath):
+        if f.endswith((".dll",".js",".lua",".py",".jar")):
+          self.pluginList.addItem(f)
+        elif f[:-2].endswith((".dll",".js",".lua",".py",".jar")) and f[-2:]==".d":
+          item = QtWidgets.QListWidgetItem()
+          item.setText("*已禁用 "+f[:-2])
+          item.setFont(font)
+          self.pluginList.addItem(item)
+      self.pluginList.sortItems()
+
   def setHtml(self,theme):
     '''设置控制台主题'''
     self.Panel_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=539&height=319&type=bds&theme={theme}"))
@@ -143,6 +168,7 @@ class gui(QWidget,Ui_MainWindow):
 
   def connectFunctions(self):
     '''连接组件与函数'''
+    self.pluginList.customContextMenuRequested.connect(self.createPluginMenu)
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
     self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
     self.setting_logout.clicked.connect(lambda: self.botControl(3))
@@ -154,6 +180,101 @@ class gui(QWidget,Ui_MainWindow):
     self.Bot_start.clicked.connect(lambda: self.botControl(1))
     self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
+
+  def createPluginMenu(self,pos):
+    row = self.pluginList.currentRow()
+    self.pluginMenu = QMenu(self.pluginList)
+    self.addPlugin = QAction('导入插件',self.pluginList)
+    self.pluginMenu.addAction(self.addPlugin)
+    self.removePlugin = QAction('删除插件',self.pluginList)
+    self.pluginMenu.addAction(self.removePlugin)
+    if self.pluginList.itemAt(pos)!=None:
+      if self.pluginList.itemAt(pos).text()[0]=="*":
+        self.disablePlugin = QAction('启用插件',self.pluginList)
+      else:
+        self.disablePlugin = QAction('禁用插件',self.pluginList)
+    else:
+      self.disablePlugin = QAction('禁用插件',self.pluginList)
+    self.pluginMenu.addAction(self.disablePlugin)
+    self.pluginMenu.addSeparator()
+    self.refreshPlugin = QAction('刷新',self.pluginList)
+    self.pluginMenu.addAction(self.refreshPlugin)
+    if row==-1 or self.pluginList.itemAt(pos)==None:
+      self.removePlugin.setDisabled(True)
+      self.disablePlugin.setDisabled(True)
+    self.addPlugin.triggered.connect(lambda: self.pluginManagement(1))
+    self.removePlugin.triggered.connect(lambda: self.pluginManagement(2,self.pluginList.itemAt(pos)))
+    self.refreshPlugin.triggered.connect(lambda: self.loadPlugins())
+    self.disablePlugin.triggered.connect(lambda: self.pluginManagement(3,self.pluginList.itemAt(pos)))
+    time.sleep(0.1)
+    self.pluginMenu.popup(QCursor.pos())
+
+  def pluginManagement(self,type,item=None):
+    print(type)
+    if type==1:
+      importFile=QFileDialog.getOpenFileName(self, "选择文件",self.pluginsPath, "插件 (*.dll *.js *.lua *.py *.jar)")
+      if importFile[0]!='':
+        try:
+          shutil.copyfile(importFile[0], os.path.join(self.pluginsPath,os.path.split(importFile[0])[1]))
+          QMessageBox.information(
+            self,
+            "Dylan",
+            f"导入成功",
+            QMessageBox.Yes
+          )
+        except Exception as e:
+          QMessageBox.information(
+            self,
+            "Dylan",
+            f"导入失败\n{e}",
+            QMessageBox.Yes
+          )
+        self.loadPlugins()
+    elif type==2 and self.pluginsPath!=None:
+      reply = QMessageBox.warning(
+      self,
+      'Dylan',
+      f'确定删除"{item.text()}"？\n他将会永远失去！（真的很久！）',
+      QMessageBox.Yes | QMessageBox.No,
+      QMessageBox.No
+      )
+      if reply == QMessageBox.Yes:
+        try:
+          os.remove(os.path.join(self.pluginsPath,item.text()))
+          QMessageBox.information(
+            self,
+            "Dylan",
+            "删除成功",
+            QMessageBox.Yes
+          )
+        except Exception as e:
+          QMessageBox.information(
+            self,
+            "Dylan",
+            f"删除失败\n{e}",
+            QMessageBox.Yes
+          )
+        self.loadPlugins()
+    elif type==3:
+      try:
+        if item.text()[0]=="*":
+          os.rename(
+            os.path.join(self.pluginsPath,item.text()[5:]+".d"),
+            os.path.join(self.pluginsPath,item.text()[5:])
+          )
+        else:
+          os.rename(
+            os.path.join(self.pluginsPath,item.text()),
+            os.path.join(self.pluginsPath,item.text()+".d")
+          )
+      except Exception as e:
+        QMessageBox.information(
+            self,
+            "Dylan",
+            f"插件状态更改失败\n{e}",
+            QMessageBox.Yes
+          )
+    self.loadPlugins()
 
   def savePort(self):
     '''保存端口'''
@@ -364,11 +485,11 @@ class gui(QWidget,Ui_MainWindow):
       if os.path.exists(os.path.join(botFilepath,"session.token")):
         os.remove(os.path.join(botFilepath,"session.token"))
       try:
-        rmtree(os.path.join(botFilepath,"data"))
+        shutil.rmtree(os.path.join(botFilepath,"data"))
       except:
         pass
       try:
-        rmtree(os.path.join(botFilepath,"logs"))
+        shutil.rmtree(os.path.join(botFilepath,"logs"))
       except:
         pass
       QMessageBox.information(
@@ -892,7 +1013,7 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.7.20220313.2"
+  VERSION="Alpha 1.8 pre"
   newVersion=None
   stopSavingSetting=False
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
