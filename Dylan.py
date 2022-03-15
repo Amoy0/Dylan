@@ -134,7 +134,7 @@ class gui(QWidget,Ui_MainWindow):
       finally:
         failTimes+=1
 
-
+ 
   def loadSetting(self):
     '''加载设置'''
     settingList=forms["setting"]
