@@ -1,27 +1,36 @@
-#file{
+/*
+* 说明：
+*  ".(any)"用于表示日志输出中方括号中的文本;
+*  "body#fusion_dark ..."表示为Fusion黑色模式下的文本;
+*  "body#fusion ..."表示为Fusion模式下的文本.
+*/
+.file{
   color:#688292
 }
-#server{
+.server{
   color:#4E8F46
 }
-#debug{
+.debug{
   color:#865FC5;
 }
-#error{
-  color:#aa0000;
+.error{
+  color:#D16969;
 }
-#warn{
-  color:#aa7a12;
+.warn{
+  color:#aa5612;
 }
-#info{
+.info{
   color:#20B2AA;
 }
-#LiteLoader,#LiteXLoader,#LLMoney{
-  color:#4682B4;
+.LiteLoader,.LiteXLoader,.LLMoney{
+  color:#4682B4 !important;
 }
-#Chakra{
-  color:#5555FF;
+.Chakra{
+  color:#5555FF !important;
 }
-#int{
-  color: #6177a0;
+.int{
+  color: #34963c;
+}
+.plugins{
+  color:#ac9462;
 }

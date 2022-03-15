@@ -83,7 +83,7 @@ def reply(settings,item,datas,commandQueue):
         commandQueue.put(executionContent)
       elif detailCommand=="CMD":
         os.system(executionContent)
-    print([content,detailCommand,target,executionContent])
+    # print([content,detailCommand,target,executionContent])
 
 def textProcessing(text,record,content):
   '''文本匹配处理'''

@@ -171,6 +171,7 @@ class gui(QWidget,Ui_MainWindow):
 
   def loadPlugins(self):
     '''加载插件'''
+    self.pluginList.clear()
     self.pluginsPath=None
     if settings.get("start")==None:
       pass
@@ -191,7 +192,6 @@ class gui(QWidget,Ui_MainWindow):
         font = QFont()
         font.setFamily("宋体")
         font.setPointSize(10)
-        self.pluginList.clear()
         for f in os.listdir(self.pluginsPath):
           if f.endswith((".dll",".js",".lua",".py",".jar")):
             total+=1
@@ -636,6 +636,7 @@ class gui(QWidget,Ui_MainWindow):
     else:
       closeBot()
       event.accept()
+      exit()
 
 class Functions(QObject):
   '''QtWeb通信模块'''
@@ -775,6 +776,13 @@ def componentInformation():
     except:
       continue
 
+def logger(text:str):
+  '''控制台消息输出'''
+  global selfPath
+  with open(os.path.join(selfPath,"log",f"console-{datetime.date.today()}.log"),"a") as logFile:
+    logFile.write(text+"\n")
+
+
 def server():
   '''服务器输出读取和状态监控'''
   global serverProcess,serverState,forms,commandQueue,restart
@@ -805,6 +813,8 @@ def server():
         "log":log,
         "type":"console"
       })
+      if settings["console"]["enableOutputToLog"]:
+        logger(log)
       if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
         forms["panel"]["version"].setText(version[:10])
         forms["panel"]["gamemode"].setText(gamemode)
@@ -881,7 +891,7 @@ def server():
       print("?")
       break
 
-def outputCommand(command):
+def outputCommand(command:str):
   '''将指令输出至bds和控制台'''
   global serverProcess,settings
   try:
@@ -890,8 +900,10 @@ def outputCommand(command):
     pass
   if settings["console"]["outputCommandToConsole"]:
     logQueue.put(">"+command)
+  if settings["console"]["enableOutputToLog"]:
+    logger(command)
 
-def outputRecognition(log):
+def outputRecognition(log:str):
   '''处理输入前缀和颜色代码'''
   log=re.sub("\[.+?m","",log)
   log=re.sub("","",log)
@@ -900,7 +912,7 @@ def outputRecognition(log):
   log=re.sub('\s$',"",log)
   return log
 
-def escapeLog(log):
+def escapeLog(log:str):
   '''转义log中的部分字符'''
   log=log.replace('/',"&#47;")
   log=log.replace('"',"&quot;")
@@ -910,17 +922,17 @@ def escapeLog(log):
   log=log.replace(">","&gt;")
   return log
 
-def colorLog(log):
+def colorLog(log:str):
   '''彩色日志处理'''
-  log=re.sub("([\[\s])(INFO|info|Info)",r"\1<span id='info'>\2</span>",log) #info
-  log=re.sub("([\[\s])(WARNING|warning|Warning)",r"\1<span id='warn'><b>\2</b></span>",log) #warn
-  log=re.sub("([\[\s])(WARN|warn|Warn)",r"\1<span id='warn'><b>\2</b></span>",log) #warn
-  log=re.sub("([\[\s])(ERROR|error|Error)",r"\1<span id='error'><b>\2</b></span>",log) #error
-  log=re.sub("([\[\s])(DEBUG|debug|Debug)",r"\1<span id='debug'>\2</span>",log) #debug
-  log=re.sub("\[(SERVER|server|Server)\]",r"[<span id='server'>\1</span>]",log) #server
-  log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span id='\1'>\1</span>]",log)  #ck
-  log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,4}))",r"<span id='file'>\1</span>",log)#{files}
-  log=re.sub("(\d{3,})",r"<span id='int'>\1</span>",log)#{files}
+  log=re.sub("([\[\s])(INFO|info|Info)",r"\1<span class='info'>\2</span>",log) #info
+  log=re.sub("([\[\s])(WARNING|warning|Warning)",r"\1<span class='warn'><b>\2</b></span>",log) #warn
+  log=re.sub("([\[\s])(WARN|warn|Warn)",r"\1<span class='warn'><b>\2</b></span>",log) #warn
+  log=re.sub("([\[\s])(ERROR|error|Error)",r"\1<span class='error'><b>\2</b></span>",log) #error
+  log=re.sub("([\[\s])(DEBUG|debug|Debug)",r"\1<span class='debug'>\2</span>",log) #debug
+  log=re.sub("\[(SERVER|server|Server)\]",r"[<span class='server'>\1</span>]",log) #server
+  log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span class='plugins \1'>\1</span>]",log)  #ck
+  log=re.sub("([0-9A-Za-z\._-]+\.)(py|jar|dll|exe|bat|json|lua|js|yaml|png|jpg|csv|log)",r"<span class='file'>\1\2</span>",log)#{files}
+  log=re.sub("(\d{5,})",r"<span class='int'>\1</span>",log)#{files}
   return log
 
 def startBot():

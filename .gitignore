@@ -3,3 +3,4 @@ __pycache__/gui.cpython-37.pyc
 __pycache__/bot.cpython-37.pyc
 setting.json
 datas.json
+*.csv
