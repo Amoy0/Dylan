@@ -261,7 +261,6 @@ class gui(QWidget,Ui_MainWindow):
       self.removePlugin.setDisabled(True)
       self.disablePlugin.setDisabled(True)
       self.addPlugin.setDisabled(True)
-
     self.addPlugin.triggered.connect(lambda: self.pluginManagement(1))
     self.removePlugin.triggered.connect(lambda: self.pluginManagement(2,self.pluginList.itemAt(pos)))
     self.refreshPlugin.triggered.connect(lambda: self.loadPlugins())
@@ -921,6 +920,7 @@ def colorLog(log):
   log=re.sub("\[(SERVER|server|Server)\]",r"[<span id='server'>\1</span>]",log) #server
   log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span id='\1'>\1</span>]",log)  #ck
   log=re.sub("(([0-9A-Za-z\._-]+\.[a-z]{2,4}))",r"<span id='file'>\1</span>",log)#{files}
+  log=re.sub("(\d{3,})",r"<span id='int'>\1</span>",log)#{files}
   return log
 
 def startBot():
