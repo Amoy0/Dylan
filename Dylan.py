@@ -32,7 +32,7 @@ class gui(QWidget,Ui_MainWindow):
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan_"+VERSION)
     self.tabWidget.setCurrentIndex(0)
-    #############
+    ############
     self.Panel_input.setDisabled(True)
     self.Panel_start.setDisabled(False)
     self.Panel_restart.setDisabled(True)
@@ -167,39 +167,40 @@ class gui(QWidget,Ui_MainWindow):
 
   def loadPlugins(self):
     '''加载插件'''
-    if os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")):
-      self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")
-    elif os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")):
-      self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")
-    else:
-      self.pluginsPath=None
-    if self.pluginsPath!=None:
-      total=0
-      enabled=0
-      disabled=0
-      time.sleep(0.05)
-      font = QFont()
-      font.setFamily("宋体")
-      font.setPointSize(10)
-      self.pluginList.clear()
-      for f in os.listdir(self.pluginsPath):
-        if f.endswith((".dll",".js",".lua",".py",".jar")):
-          total+=1
-          enabled+=1
-          font.setItalic(False)
-          item = QtWidgets.QListWidgetItem()
-          item.setText(f)
-          item.setFont(font)
-          self.pluginList.addItem(item)
-        elif f[:-2].endswith((".dll",".js",".lua",".py",".jar")) and f[-2:]==".d":
-          total+=1
-          disabled+=1
-          font.setItalic(True)
-          item = QtWidgets.QListWidgetItem()
-          item.setText("*已禁用 "+f[:-2])
-          item.setFont(font)
-          self.pluginList.addItem(item)
-      self.plugins_total.setText(f"共{total}个插件，其中{enabled}个已启用，{disabled}个已禁用")
+    if os.path.exists(settings["start"]["filepath"]):
+      if os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")):
+        self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")
+      elif os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")):
+        self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")
+      else:
+        self.pluginsPath=None
+      if self.pluginsPath!=None:
+        total=0
+        enabled=0
+        disabled=0
+        time.sleep(0.05)
+        font = QFont()
+        font.setFamily("宋体")
+        font.setPointSize(10)
+        self.pluginList.clear()
+        for f in os.listdir(self.pluginsPath):
+          if f.endswith((".dll",".js",".lua",".py",".jar")):
+            total+=1
+            enabled+=1
+            font.setItalic(False)
+            item = QtWidgets.QListWidgetItem()
+            item.setText(f)
+            item.setFont(font)
+            self.pluginList.addItem(item)
+          elif f[:-2].endswith((".dll",".js",".lua",".py",".jar")) and f[-2:]==".d":
+            total+=1
+            disabled+=1
+            font.setItalic(True)
+            item = QtWidgets.QListWidgetItem()
+            item.setText("*已禁用 "+f[:-2])
+            item.setFont(font)
+            self.pluginList.addItem(item)
+        self.plugins_total.setText(f"共{total}个插件，其中{enabled}个已启用，{disabled}个已禁用")
 
   def setHtml(self,theme):
     '''设置控制台主题'''
@@ -716,7 +717,6 @@ def componentInformation():
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
-
       groupList=[]
       permissionList=[]
       if stopSavingSetting:
@@ -864,7 +864,6 @@ def server():
         forms["setting"]["start"]["selectfile"].setDisabled(False)
         forms["setting"]["start"]["filepath"].setDisabled(False)
         break
-
     try:
       if not MainWindow.isVisible():
         serverProcess.stdin.write("stop\n")
@@ -1100,7 +1099,7 @@ if __name__=="__main__":
         settings={}
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
-    exit()
+    exit() 
   if not os.path.exists(os.path.join(selfPath,"log")):
     os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)
