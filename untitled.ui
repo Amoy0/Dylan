@@ -980,7 +980,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-269</y>
          <width>800</width>
          <height>700</height>
         </rect>
@@ -1431,7 +1431,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>新版本更新提示</string>
+          <string>启动时新版本更新提示</string>
          </property>
         </widget>
         <widget class="QComboBox" name="setting_enableAnnouncement">

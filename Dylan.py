@@ -8,7 +8,7 @@ import subprocess
 import sys
 import threading
 import time
-import win32api,win32con
+
 import psutil
 import PyQt5
 import requests
@@ -16,8 +16,8 @@ from bot import *
 from flask import Flask, request
 from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QPoint, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette,QPixmap,QFont
+from PyQt5.QtCore import QObject, QUrl, pyqtSlot
+from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -105,6 +105,36 @@ class gui(QWidget,Ui_MainWindow):
     self.loadPlugins()
     self.connectFunctions()
 
+  def showEvent(self, event):
+    '''启动时加载更新信息'''
+    global settings,VERSION
+    msgbox=QMessageBox(self)
+    text=None
+    failTimes=0
+    while True:
+      try:
+        if settings["Dylan"]["enableUpdate"] and failTimes<=3:
+          versionJson=json.loads(requests.request(method="GET",url="https://api.github.com/repos/Zaiton233/Dylan/releases").text)
+          if int(re.findall("(\d{8})",versionJson[0]["name"])[0])<=int(re.findall("(\d{8})",VERSION)[0]):
+            break
+          if not versionJson[0]["draft"]:
+            body=versionJson[0]["body"].replace("\r","").replace("\n","<br>")
+            text=f'<div>当前版本：{VERSION}</div><div>最新版本：{versionJson[0]["name"]}</div><div>发布日期：{versionJson[0]["published_at"]}</div><div>下载链接：<br><a href="{versionJson[0]["html_url"]}" style="color:#2d94a7;">{versionJson[0]["html_url"]}</a><hr></div><div style="word-break: break-all;">更新说明：<br>{body}</div>'
+            msgbox.setWindowTitle("Dylan - 发现新版本")
+            msgbox.setText(text)
+            msgbox.show()
+            break
+          else:
+            break
+        else:
+          break
+      except Exception as e:
+        print(e)
+        pass
+      finally:
+        failTimes+=1
+
+
   def loadSetting(self):
     '''加载设置'''
     settingList=forms["setting"]
@@ -186,6 +216,7 @@ class gui(QWidget,Ui_MainWindow):
     self.setting_logout.clicked.connect(lambda: self.botControl(3))
     self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
     self.setting_reset.clicked.connect(self.reset)
+    self.setting_reset.clicked.connect(self.reset)
     self.setting_savePort.clicked.connect(lambda:self.savePort())
     self.Panel_start.clicked.connect(lambda: self.serverControl(1))
     self.Panel_stop.clicked.connect(lambda: self.serverControl(2))
@@ -194,6 +225,7 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_input.returnPressed.connect(self.transferCommand)
 
   def createPluginMenu(self,pos):
+    '''创建插件管理菜单'''
     global serverState
     row = self.pluginList.currentRow()
     self.pluginMenu = QMenu(self.pluginList)
@@ -228,6 +260,7 @@ class gui(QWidget,Ui_MainWindow):
     self.pluginMenu.popup(QCursor.pos())
 
   def pluginManagement(self,type,item=None):
+    '''插件管理'''
     if type==1:
       importFile=QFileDialog.getOpenFileName(self, "选择文件",self.pluginsPath, "插件 (*.dll *.js *.lua *.py *.jar)")
       if importFile[0]!='':
@@ -248,7 +281,7 @@ class gui(QWidget,Ui_MainWindow):
           )
         self.loadPlugins()
     elif type==2 and self.pluginsPath!=None:
-      
+
       if item.text()[0]=="*":
         fileName=item.text()[5:]
       else:
@@ -831,7 +864,7 @@ def server():
         forms["setting"]["start"]["selectfile"].setDisabled(False)
         forms["setting"]["start"]["filepath"].setDisabled(False)
         break
-    
+
     try:
       if not MainWindow.isVisible():
         serverProcess.stdin.write("stop\n")
@@ -1021,30 +1054,6 @@ def runHttp():
     port=settings["bot"]["listenPort"]
   httpServer.run(host='127.0.0.1', port=port)
 
-def getVersion():
-  '''获取新版本'''
-  global settings,newVersion
-  while True:
-    time.sleep(1)
-    try:
-      if settings["Dylan"]["enableUpdate"]:
-        versionJson=json.loads(requests.request(method="GET",url="https://api.github.com/repos/Zaiton233/Dylan/releases").text)
-        if newVersion!=versionJson[0]["name"] and VERSION!=versionJson[0]["name"] and not versionJson[0]["draft"]:
-          newVersion=versionJson[0]["name"]
-          body=versionJson[0]["body"].replace("\r","")
-          time.sleep(3)
-          win32api.MessageBox(
-            0,
-            f'{versionJson[0]["name"]}\n发布日期：{versionJson[0]["published_at"]}\n\n更新内容：\n{body}',
-            "Dylan - 发现新版本",
-            win32con.MB_OK
-          )
-      else:
-        newVersion=None
-      time.sleep(100)
-    except:
-      pass
-
 def mainGui():
   '''主窗口'''
   global MainWindow
@@ -1057,7 +1066,7 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.8 pre"
+  VERSION="Alpha 1.8.20220315"
   restart=False
   newVersion=None
   stopSavingSetting=False
@@ -1106,6 +1115,4 @@ if __name__=="__main__":
   botThread.start()
   msgThread=threading.Thread(target=lambda:messageProcessing(regQueue,commandQueue),daemon=True)
   msgThread.start()
-  getVersionThread=threading.Thread(target=getVersion,daemon=True)
-  getVersionThread.start()
   mainGui()
