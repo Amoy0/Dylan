@@ -12,14 +12,15 @@ import time
 import psutil
 import PyQt5
 import requests
-from bot import *
 from flask import Flask, request
-from gui import Ui_MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
 from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
+
+from bot import *
+from gui import Ui_MainWindow
 
 
 class gui(QWidget,Ui_MainWindow):
@@ -111,9 +112,13 @@ class gui(QWidget,Ui_MainWindow):
     msgbox=QMessageBox(self)
     text=None
     failTimes=0
-    while True:
+    try:
+      enableUpdate=settings["Dylan"]["enableUpdate"]
+    except:
+      enableUpdate=True
+    while enableUpdate:
       try:
-        if settings["Dylan"]["enableUpdate"] and failTimes<=3:
+        if failTimes<=3:
           versionJson=json.loads(requests.request(method="GET",url="https://api.github.com/repos/Zaiton233/Dylan/releases").text)
           if int(re.findall("(\d{8})",versionJson[0]["name"])[0])<=int(re.findall("(\d{8})",VERSION)[0]):
             break
@@ -134,7 +139,6 @@ class gui(QWidget,Ui_MainWindow):
       finally:
         failTimes+=1
 
- 
   def loadSetting(self):
     '''加载设置'''
     settingList=forms["setting"]
@@ -167,7 +171,12 @@ class gui(QWidget,Ui_MainWindow):
 
   def loadPlugins(self):
     '''加载插件'''
-    if os.path.exists(settings["start"]["filepath"]):
+    self.pluginsPath=None
+    if settings.get("start")==None:
+      pass
+    elif settings["start"].get("filepath")==None:
+      pass
+    elif os.path.exists(settings["start"]["filepath"]):
       if os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")):
         self.pluginsPath=os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugins")
       elif os.path.exists(os.path.join(os.path.split(settings["start"]["filepath"])[0],"plugin")):
@@ -248,7 +257,7 @@ class gui(QWidget,Ui_MainWindow):
     if row==-1 or self.pluginList.itemAt(pos)==None:
       self.removePlugin.setDisabled(True)
       self.disablePlugin.setDisabled(True)
-    if serverState==1:
+    if serverState==1 or self.pluginsPath==None:
       self.removePlugin.setDisabled(True)
       self.disablePlugin.setDisabled(True)
       self.addPlugin.setDisabled(True)
