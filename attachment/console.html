@@ -47,7 +47,8 @@
   <script src="./qwebchannel.js"></script>
   <script src="./jquery-3.6.0.min.js"></script>
   <link rel="shortcut icon" href="./ico.png" type="image/x-icon">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="preset.css">
+  <link rel="stylesheet" href="vanilla.css">
   <script>
     line=0
     removed=1
@@ -87,11 +88,12 @@
           block: 'end',
           behavior: 'smooth' 
         });
-        if(line>1000){
+        if(line>100){
             $("#main div:first-child").remove();
             line-=1;
         }// 自动清除控制台旧输出
         if(text=="#cls"){
+          line=0;
           $("#main").html("");
         }
       }

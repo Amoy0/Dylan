@@ -1,0 +1,33 @@
+.color30,.color40{
+  color:#000000;
+}
+body#fusion_dark .color37,body#fusion_dark .color47{
+  color:#dddddd !important;
+}
+.color31,.color41{
+  color:#ff0000;
+}
+.color32,.color42{
+  color:#00ff00;
+}
+.color33,.color43{
+  color:#ffff00;
+}
+.color34,.color44{
+  color:#0000ff;
+}
+.color35,.color45{
+  color:#ff00ff;
+}
+.color36,.color46{
+  color:#00ffff;
+}
+body#fusion_dark .color37,body#fusion_dark .color47{
+  color:#ffffff !important;
+}
+.color37,.color47{
+  color:#1E1E1E;
+}
+.color91{
+  color:#CD3131;
+}
