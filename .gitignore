@@ -4,3 +4,6 @@ __pycache__/bot.cpython-37.pyc
 setting.json
 datas.json
 *.csv
+*.log
+dylan_settings.json
+go-cqhttp.bat
