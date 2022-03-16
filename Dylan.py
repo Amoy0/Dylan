@@ -1064,7 +1064,7 @@ def mainGui():
 if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.8.20220315"
+  VERSION="Alpha 1.9.20220316"
   restart=False
   newVersion=None
   stopSavingSetting=False
