@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'untitled.ui'
+# Form implementation generated from reading ui file './../untitled.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(QtCore.QSize(800, 450))
         MainWindow.setMaximumSize(QtCore.QSize(800, 450))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("ico.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("./..\\ico.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setWindowOpacity(1.0)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -441,16 +441,17 @@ class Ui_MainWindow(object):
         self.setting_color_style.setGeometry(QtCore.QRect(20, 30, 141, 16))
         self.setting_color_style.setObjectName("setting_color_style")
         self.setting_colorfulLogOut = QtWidgets.QComboBox(self.setting_console)
-        self.setting_colorfulLogOut.setGeometry(QtCore.QRect(20, 50, 131, 22))
+        self.setting_colorfulLogOut.setGeometry(QtCore.QRect(20, 50, 161, 22))
         self.setting_colorfulLogOut.setObjectName("setting_colorfulLogOut")
         self.setting_colorfulLogOut.addItem("")
         self.setting_colorfulLogOut.addItem("")
         self.setting_colorfulLogOut.addItem("")
+        self.setting_colorfulLogOut.addItem("")
         self.setting_enableOutputToLog = QtWidgets.QCheckBox(self.setting_console)
-        self.setting_enableOutputToLog.setGeometry(QtCore.QRect(220, 30, 161, 16))
+        self.setting_enableOutputToLog.setGeometry(QtCore.QRect(260, 35, 161, 16))
         self.setting_enableOutputToLog.setObjectName("setting_enableOutputToLog")
         self.setting_outputCommandToConsole = QtWidgets.QCheckBox(self.setting_console)
-        self.setting_outputCommandToConsole.setGeometry(QtCore.QRect(220, 50, 201, 16))
+        self.setting_outputCommandToConsole.setGeometry(QtCore.QRect(260, 55, 201, 16))
         self.setting_outputCommandToConsole.setObjectName("setting_outputCommandToConsole")
         self.setting_msg = QtWidgets.QGroupBox(self.setting_scrollAreaWidgetContents)
         self.setting_msg.setGeometry(QtCore.QRect(10, 360, 761, 171))
@@ -489,7 +490,7 @@ class Ui_MainWindow(object):
         self.setting_announcement.setGeometry(QtCore.QRect(20, 60, 41, 21))
         self.setting_announcement.setObjectName("setting_announcement")
         self.setting_reset = QtWidgets.QPushButton(self.setting_dylan)
-        self.setting_reset.setGeometry(QtCore.QRect(210, 80, 81, 31))
+        self.setting_reset.setGeometry(QtCore.QRect(210, 85, 81, 31))
         self.setting_reset.setObjectName("setting_reset")
         self.setting_chosenTheme = QtWidgets.QComboBox(self.setting_dylan)
         self.setting_chosenTheme.setGeometry(QtCore.QRect(50, 90, 121, 20))
@@ -502,7 +503,7 @@ class Ui_MainWindow(object):
         self.setting_theme.setObjectName("setting_theme")
         self.setting_state = QtWidgets.QPushButton(self.setting_dylan)
         self.setting_state.setEnabled(False)
-        self.setting_state.setGeometry(QtCore.QRect(210, 40, 81, 31))
+        self.setting_state.setGeometry(QtCore.QRect(210, 35, 81, 31))
         self.setting_state.setObjectName("setting_state")
         self.setting_scrollArea.setWidget(self.setting_scrollAreaWidgetContents)
         self.tabWidget.addTab(self.setting, "")
@@ -602,8 +603,9 @@ class Ui_MainWindow(object):
         self.setting_console.setTitle(_translate("MainWindow", "控制台"))
         self.setting_color_style.setText(_translate("MainWindow", "彩色输出样式"))
         self.setting_colorfulLogOut.setItemText(0, _translate("MainWindow", "禁用"))
-        self.setting_colorfulLogOut.setItemText(1, _translate("MainWindow", "原彩色输出"))
-        self.setting_colorfulLogOut.setItemText(2, _translate("MainWindow", "预设(style.css)"))
+        self.setting_colorfulLogOut.setItemText(1, _translate("MainWindow", "原彩色输出(vanilla.css)"))
+        self.setting_colorfulLogOut.setItemText(2, _translate("MainWindow", "语法加强(preset.css)"))
+        self.setting_colorfulLogOut.setItemText(3, _translate("MainWindow", "综合(Both)"))
         self.setting_enableOutputToLog.setText(_translate("MainWindow", "保存到日志文件"))
         self.setting_outputCommandToConsole.setText(_translate("MainWindow", "输出执行的命令到控制台"))
         self.setting_msg.setTitle(_translate("MainWindow", "消息"))

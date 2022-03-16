@@ -19,9 +19,9 @@ from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
+from betterLog import *
 from bot import *
 from gui import Ui_MainWindow
-
 
 class gui(QWidget,Ui_MainWindow):
   '''主窗口'''
@@ -98,7 +98,7 @@ class gui(QWidget,Ui_MainWindow):
           "enableAnnouncement":self.setting_enableAnnouncement,
           "chosenTheme":self.setting_chosenTheme,
         }
-      },
+      }, 
       "regularlist":self.regularlist
       }
     self.loadSetting()
@@ -780,8 +780,7 @@ def logger(text:str):
   '''控制台消息输出'''
   global selfPath
   with open(os.path.join(selfPath,"log",f"console-{datetime.date.today()}.log"),"a",encoding="UTF-8") as logFile:
-    logFile.write(text+"\n")
-
+    logFile.write(outputRecognition(text)+"\n")
 
 def server():
   '''服务器输出读取和状态监控'''
@@ -808,14 +807,14 @@ def server():
     except:
       serverState=0
     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
-      log=outputRecognition(log)
       regQueue.put({
-        "log":log,
+        "log":outputRecognition(log),
         "type":"console"
       })
       if settings["console"]["enableOutputToLog"]:
         logger(log)
-      if (re.search("Server\sstarted\.$",log) or log.find("Done")>0) and started==0:
+      log_=outputRecognition(log)
+      if (re.search("Server\sstarted\.$",log_) or log_.find("Done")>0) and started==0:
         forms["panel"]["version"].setText(version[:10])
         forms["panel"]["gamemode"].setText(gamemode)
         forms["panel"]["difficulty"].setText(difficulty)
@@ -824,34 +823,33 @@ def server():
         forms["panel"]["port"].setText(ipv4+" /"+ipv6)
         started=1
       if started==0:
-        if log.find("Version")>0:
-          version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log)
-        elif log.find("Game mode")>0 :
-          if log.find("Survival")>0:
+        if log_.find("Version")>0:
+          version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log_)
+        elif log_.find("Game mode")>0 :
+          if log_.find("Survival")>0:
             gamemode="生存"
-          elif log.find("Creative")>0:
+          elif log_.find("Creative")>0:
             gamemode="创造"
           else:
             gamemode="冒险"
-        elif log.find("Difficulty")>0:
-          if log.find("PEACEFUL")>0:
+        elif log_.find("Difficulty")>0:
+          if log_.find("PEACEFUL")>0:
             difficulty="和平"
-          elif log.find("EASY")>0:
+          elif log_.find("EASY")>0:
             difficulty="简单"
-          elif log.find("NORMAL")>0:
+          elif log_.find("NORMAL")>0:
             difficulty="普通"
           else:
             difficulty="困难"
-        elif log.find("Level Name")>0:
-          levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log)
-        elif log.find("IPv4")>0:
-          ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
-        elif log.find("IPv6")>0:
-          ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log)
+        elif log_.find("Level Name")>0:
+          levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log_)
+        elif log_.find("IPv4")>0:
+          ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
+        elif log_.find("IPv6")>0:
+          ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
         forms["panel"]["state"].setText("启动中")
       log=escapeLog(log)
-      if forms["setting"]["console"]["colorfulLogOut"].currentIndex()==2:
-        log=colorLog(log)
+      log=colorLog(log,forms["setting"]["console"]["colorfulLogOut"].currentIndex())
       logQueue.put(log)
     try:
       psutil.Process(serverProcess.pid)
@@ -903,38 +901,6 @@ def outputCommand(command:str):
   if settings["console"]["enableOutputToLog"]:
     logger(f"{str(datetime.datetime.now().time()).split('.')[0]} Command {command}")
 
-def outputRecognition(log:str):
-  '''处理输入前缀和颜色代码'''
-  log=re.sub("\[.+?m","",log)
-  log=re.sub("","",log)
-  log=re.sub('^> ',"",log)
-  log=re.sub('^>',"",log)
-  log=re.sub('\s$',"",log)
-  return log
-
-def escapeLog(log:str):
-  '''转义log中的部分字符'''
-  log=log.replace('/',"&#47;")
-  log=log.replace('"',"&quot;")
-  log=log.replace(',',"&#44;")
-  log=log.replace(':',"&#58;")
-  log=log.replace("<","&lt;")
-  log=log.replace(">","&gt;")
-  return log
-
-def colorLog(log:str):
-  '''彩色日志处理'''
-  log=re.sub("([\[\s])(INFO|info|Info)",r"\1<span class='info'>\2</span>",log) #info
-  log=re.sub("([\[\s])(WARNING|warning|Warning)",r"\1<span class='warn'><b>\2</b></span>",log) #warn
-  log=re.sub("([\[\s])(WARN|warn|Warn)",r"\1<span class='warn'><b>\2</b></span>",log) #warn
-  log=re.sub("([\[\s])(ERROR|error|Error)",r"\1<span class='error'><b>\2</b></span>",log) #error
-  log=re.sub("([\[\s])(DEBUG|debug|Debug)",r"\1<span class='debug'>\2</span>",log) #debug
-  log=re.sub("\[(SERVER|server|Server)\]",r"[<span class='server'>\1</span>]",log) #server
-  log=re.sub("\[([A-Za-z0-9\s]+?)\]",r"[<span class='plugins \1'>\1</span>]",log)  #ck
-  log=re.sub("([0-9A-Za-z\._-]+\.)(py|jar|dll|exe|bat|json|lua|js|yaml|png|jpg|csv|log)",r"<span class='file'>\1\2</span>",log)#{files}
-  log=re.sub("(\d{5,})",r"<span class='int'>\1</span>",log)#{files}
-  return log
-
 def startBot():
   '''机器人启动程序'''
   global botState,botProcess,forms,settings
@@ -966,7 +932,7 @@ def startBot():
         if not re.search('^[\n\s\r]+?$',log) and log!="":
           log=outputRecognition(log)
           log=escapeLog(log)
-          log=colorLog(log)
+          log=colorLog(log,1)
           botQueue.put(log)
           if log.find("请输入你需要的编号")>=0 :
             time.sleep(1)

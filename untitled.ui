@@ -1281,7 +1281,7 @@
           <rect>
            <x>20</x>
            <y>50</y>
-           <width>131</width>
+           <width>161</width>
            <height>22</height>
           </rect>
          </property>
@@ -1295,20 +1295,25 @@
          </item>
          <item>
           <property name="text">
-           <string>原彩色输出</string>
+           <string>原彩色输出(vanilla.css)</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>预设(style.css)</string>
+           <string>语法加强(preset.css)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>综合(Both)</string>
           </property>
          </item>
         </widget>
         <widget class="QCheckBox" name="setting_enableOutputToLog">
          <property name="geometry">
           <rect>
-           <x>220</x>
-           <y>30</y>
+           <x>260</x>
+           <y>35</y>
            <width>161</width>
            <height>16</height>
           </rect>
@@ -1320,8 +1325,8 @@
         <widget class="QCheckBox" name="setting_outputCommandToConsole">
          <property name="geometry">
           <rect>
-           <x>220</x>
-           <y>50</y>
+           <x>260</x>
+           <y>55</y>
            <width>201</width>
            <height>16</height>
           </rect>
@@ -1482,7 +1487,7 @@
          <property name="geometry">
           <rect>
            <x>210</x>
-           <y>80</y>
+           <y>85</y>
            <width>81</width>
            <height>31</height>
           </rect>
@@ -1536,7 +1541,7 @@
          <property name="geometry">
           <rect>
            <x>210</x>
-           <y>40</y>
+           <y>35</y>
            <width>81</width>
            <height>31</height>
           </rect>
