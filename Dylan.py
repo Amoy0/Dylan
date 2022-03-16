@@ -575,7 +575,7 @@ class gui(QWidget,Ui_MainWindow):
         self.setting_filepath.setText(startFile[0])
       self.loadPlugins()
     elif area==1:
-      startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "go-cqhttp (go-cqhttp_windows_arm64.exe go-cqhttp_windows_amd64.exe)")
+      startFile=QFileDialog.getOpenFileName(self, "选择文件",selfPath, "go-cqhttp (go-cqhttp.exe go-cqhttp_windows_armv7.exe go-cqhttp_windows_386.exe go-cqhttp_windows_arm64.exe go-cqhttp_windows_amd64.exe)")
       if startFile[0]!='':
         self.setting_botFilepath.setText(startFile[0])
 
@@ -779,8 +779,8 @@ def componentInformation():
 def logger(text:str):
   '''控制台消息输出'''
   global selfPath
-  with open(os.path.join(selfPath,"log",f"console-{datetime.date.today()}.log"),"a") as logFile:
-    logFile.write(text+"\n")
+  with open(os.path.join(selfPath,"log",f"console-{datetime.date.today()}.log"),"a",encoding="UTF-8") as logFile:
+    logFile.write(text)
 
 
 def server():
@@ -808,7 +808,7 @@ def server():
     except:
       serverState=0
     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
-      log=outputRecognition(log)
+      # log=outputRecognition(log)
       regQueue.put({
         "log":log,
         "type":"console"
@@ -944,7 +944,7 @@ def startBot():
       continue
     if botState==1:
       with open(os.path.join(selfPath,"go-cqhttp.bat"), 'w',encoding='utf-8')as bat:
-        bat.write("chcp 65001\ncd "+os.path.split(settings["bot"]["botFilepath"])[0]+"\necho.#cls\n"+settings["bot"]["botFilepath"])
+        bat.write("chcp 65001\ncd \""+os.path.split(settings["bot"]["botFilepath"])[0]+"\"\necho.#cls\n\""+settings["bot"]["botFilepath"]+"\"")
       botProcess=subprocess.Popen(
       os.path.join(selfPath,"go-cqhttp.bat"),
       stdout=subprocess.PIPE,
@@ -960,14 +960,26 @@ def startBot():
           botState=0
         if re.search('qrcode.png',log):
           qrpath=os.path.join(os.path.split(settings["bot"]["botFilepath"])[0],"qrcode.png")
-          os.system(qrpath)
-        if log.find("登录成功")>0 :
-          forms["bot"]["state"].setText("运行中")
+          if os.path.exists(qrpath):
+            os.system(qrpath)
+        
         if not re.search('^[\n\s\r]+?$',log) and log!="":
           log=outputRecognition(log)
           log=escapeLog(log)
           log=colorLog(log)
           botQueue.put(log)
+          if log.find("请输入你需要的编号")>=0 :
+            time.sleep(1)
+            botProcess.stdin.write("0\n")
+            botQueue.put(("[<span style='color:#007ACC'>Dylan</span>]已自动输入"))
+          elif log.find("默认配置文件已生成")>=0:
+            botProcess.stdin.write("\n")
+          elif log.find("登录成功")>0 :
+            forms["bot"]["state"].setText("运行中")
+        try:
+          psutil.Process(botProcess.pid)
+        except:
+          botState=0
     else:
       try:
         forms["bot"]["start"].setDisabled(False)
