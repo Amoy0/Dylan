@@ -10,8 +10,8 @@
   <a href="#">
     <img src="https://img.shields.io/badge/ State-%E6%9B%B4%E6%96%B0%E4%B8%AD-orange">
   </a> 
-  <a herf="https://github.com/Zaiton233/Dylan/commits/main">
-  <img alt="GitHub last commit (branch)" src="https://img.shields.io/github/last-commit/Zaiton233/Dylan/main">
+  <a href="https://github.com/Zaiton233/Dylan/commits/main">
+    <img src="https://img.shields.io/github/last-commit/Zaiton233/Dylan/main">
   </a>
   
 </p>
