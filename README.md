@@ -1,9 +1,22 @@
-# Dylan  
 ## Dylan-新时代基岩版服务端管理器  
-### 基本介绍   
-立项日期：2022年2月5日 
-当前状态：更新中 
- 
+<p align="center"><img src="https://s2.loli.net/2022/03/16/MPdkNnRX4s2t7Yh.png"></p>
+<p align="center">
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/badge/ Python-v3.7%2B-blue">
+  </a>   
+  <a href="#">
+    <img src="https://img.shields.io/badge/ Version-Alpha%201-yellow">
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/ State-%E6%9B%B4%E6%96%B0%E4%B8%AD-orange">
+  </a> 
+  <a herf="https://github.com/Zaiton233/Dylan/commits/main">
+  <img alt="GitHub last commit (branch)" src="https://img.shields.io/github/last-commit/Zaiton233/Dylan/main">
+  </a>
+  
+</p>
+
+---  
 ### 使用方法&界面介绍 
 https://docs.qq.com/doc/p/843b94ec1a19c9592dbcccc7b289e688013e05fc?dver=3.0.27447048 
 
@@ -25,4 +38,3 @@ https://docs.qq.com/doc/p/843b94ec1a19c9592dbcccc7b289e688013e05fc?dver=3.0.2744
 - [ ] 定时任务  
 - [ ] 材质附加包管理 
 - [ ] 群同步白名单  
-
