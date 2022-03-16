@@ -780,7 +780,7 @@ def logger(text:str):
   '''控制台消息输出'''
   global selfPath
   with open(os.path.join(selfPath,"log",f"console-{datetime.date.today()}.log"),"a",encoding="UTF-8") as logFile:
-    logFile.write(text)
+    logFile.write(text+"\n")
 
 
 def server():
@@ -808,7 +808,7 @@ def server():
     except:
       serverState=0
     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
-      # log=outputRecognition(log)
+      log=outputRecognition(log)
       regQueue.put({
         "log":log,
         "type":"console"
@@ -901,7 +901,7 @@ def outputCommand(command:str):
   if settings["console"]["outputCommandToConsole"]:
     logQueue.put(">"+command)
   if settings["console"]["enableOutputToLog"]:
-    logger(command)
+    logger(f"{str(datetime.datetime.now().time()).split('.')[0]} Command {command}")
 
 def outputRecognition(log:str):
   '''处理输入前缀和颜色代码'''
