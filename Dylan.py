@@ -636,7 +636,7 @@ class gui(QWidget,Ui_MainWindow):
     else:
       closeBot()
       event.accept()
-      exit()
+      sys.exit()
 
 class Functions(QObject):
   '''QtWeb通信模块'''
