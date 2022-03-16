@@ -6,3 +6,4 @@ datas.json
 log/*.*
 dylan_settings.json
 go-cqhttp.bat
+production/*.*
