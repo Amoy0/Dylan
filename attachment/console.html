@@ -22,7 +22,6 @@
     }
     body#fusion{
       background: #F9F9F9;
-
     }
     body#fusion_dark{
       background: #424242;
@@ -61,6 +60,9 @@
     document.addEventListener("DOMContentLoaded", function () {
       $("body").attr("style","width:"+GetQueryString("width")+"px;height:"+GetQueryString("height")+"px");
       $("body").attr("id",GetQueryString("theme"));
+      if (GetQueryString("theme") != "fusion_dark"){
+        $("#main").attr("class","noColor");
+      }
       try{
         new QWebChannel(qt.webChannelTransport, function (channel) {
         window.obj = channel.objects.obj;

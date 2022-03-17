@@ -980,7 +980,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-269</y>
+         <y>0</y>
          <width>800</width>
          <height>700</height>
         </rect>
@@ -1286,16 +1286,16 @@
           </rect>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>3</number>
          </property>
          <item>
           <property name="text">
-           <string>禁用</string>
+           <string>无</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>原彩色输出(vanilla.css)</string>
+           <string>原版(vanilla.css)</string>
           </property>
          </item>
          <item>
@@ -1305,7 +1305,7 @@
          </item>
          <item>
           <property name="text">
-           <string>综合(Both)</string>
+           <string>混合(Both)</string>
           </property>
          </item>
         </widget>

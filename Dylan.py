@@ -385,7 +385,7 @@ class gui(QWidget,Ui_MainWindow):
         time.sleep(1)
         with open(os.path.join(selfPath,"setting.json"), 'w',encoding='utf-8') as jsonFile:
           jsonFile.write("{}")
-        exit()
+        sys.exit()
 
   def setThemes(self,themeId):
     '''设置主题'''
@@ -410,7 +410,7 @@ class gui(QWidget,Ui_MainWindow):
       dark_palette.setColor(QPalette.Text, QColor(255,255,255))
       dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
       dark_palette.setColor(QPalette.Disabled,QPalette.Button, QColor(30,30,30))
-      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(0,0,0,0))
+      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(27,27,27))
       dark_palette.setColor(QPalette.ButtonText, QColor(255,255,255))
       dark_palette.setColor(QPalette.BrightText, QColor(255,0,0))
       dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
@@ -676,9 +676,9 @@ def componentInformation():
       time.sleep(1)
       try:
         if not MainWindow.isVisible():
-          exit()
+          sys.exit()
       except:
-        exit()
+        sys.exit()
       datas={
         "type":"datas",
         "_notice":"请不要在此修改任何内容！！！",
@@ -799,13 +799,18 @@ def server():
     )
   logQueue.put("#cls")
   logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
+  stopFlag=0
   started=0
   print(serverProcess.pid)
   while serverState==1:
+    if stopFlag>0:
+      stopFlag-=1
     try:
+      log=""
       log=serverProcess.stdout.readline()
     except:
-      serverState=0
+      pass
+    
     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
       regQueue.put({
         "log":outputRecognition(log),
@@ -814,7 +819,9 @@ def server():
       if settings["console"]["enableOutputToLog"]:
         logger(log)
       log_=outputRecognition(log)
-      if (re.search("Server\sstarted\.$",log_) or log_.find("Done")>0) and started==0:
+      if re.search('stop',log_,re.I) or re.search('exit',log_,re.I) or re.search('quit',log_,re.I):
+        stopFlag=10
+      if ((re.search("Server\sstarted\.$",log_) or log_.find("Done")>0)) and started==0:
         forms["panel"]["version"].setText(version[:10])
         forms["panel"]["gamemode"].setText(gamemode)
         forms["panel"]["difficulty"].setText(difficulty)
@@ -854,14 +861,17 @@ def server():
     try:
       psutil.Process(serverProcess.pid)
     except:
-      if settings["start"]["autoRestart"]:
+      if settings["start"]["autoRestart"] and stopFlag==0:
         restart=True
       serverState=0
     finally:
-      if bool(serverProcess.poll()) or re.search("Quit\scorrectly",log) or serverState==0 or log.find("exit")>0:
+      if bool(serverProcess.poll()) or serverState==0:
         serverState=0
         logQueue.put("<br>")
-        logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程已退出"))
+        if stopFlag>0:
+          logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程已退出"))
+        else:
+          logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程疑似异常终止"))
         time.sleep(0.05)
         forms["panel"]["port"].setText("- / -")
         forms["panel"]["levelname"].setText("-")
@@ -928,11 +938,10 @@ def startBot():
           qrpath=os.path.join(os.path.split(settings["bot"]["botFilepath"])[0],"qrcode.png")
           if os.path.exists(qrpath):
             os.system(qrpath)
-        
         if not re.search('^[\n\s\r]+?$',log) and log!="":
           log=outputRecognition(log)
           log=escapeLog(log)
-          log=colorLog(log,1)
+          log=colorLog(log,2)
           botQueue.put(log)
           if log.find("请输入你需要的编号")>=0 :
             time.sleep(1)
@@ -973,7 +982,7 @@ def startServer():
       forms["setting"]["start"]["selectfile"].setDisabled(False)
       forms["setting"]["start"]["filepath"].setDisabled(False)
     if restart:
-      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器将在5s后重启…"))
+      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器将在5s后重启 Tip:可按下停止按钮停用重启进程"))
       for i in range(10):
         time.sleep(0.5)
         if not restart:
@@ -982,7 +991,7 @@ def startServer():
     if serverState==1 or restart:
       restart=False
       server()
-  exit()
+  sys.exit()
 
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
@@ -1098,7 +1107,7 @@ if __name__=="__main__":
         settings={}
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
-    exit() 
+    sys.exit() 
   if not os.path.exists(os.path.join(selfPath,"log")):
     os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)
