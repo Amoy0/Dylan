@@ -4,8 +4,8 @@
   <title>Dylan_Console</title>
   <style>
     body{
-      width: 100%;
-      height: 100%;
+      /* width: 100%;
+      height: 100%; */
       margin: 0;
       overflow: hidden;
       font-family: 新宋体,宋体;
@@ -58,7 +58,6 @@
       return null;
     };
     document.addEventListener("DOMContentLoaded", function () {
-      $("body").attr("style","width:"+GetQueryString("width")+"px;height:"+GetQueryString("height")+"px");
       $("body").attr("id",GetQueryString("theme"));
       if (GetQueryString("theme") != "fusion_dark"){
         $("#main").attr("class","noColor");
@@ -83,7 +82,7 @@
       }
     }
     function printlog(text){
-      if(text!="None"){
+      if(text!="None" & text[0]!="#"){
         line+=1
         $("#main").append("<div>"+text+"</div>");
         document.querySelector("#main div:last-child").scrollIntoView({
@@ -94,11 +93,16 @@
             $("#main div:first-child").remove();
             line-=1;
         }// 自动清除控制台旧输出
+      }else{
         if(text=="#cls"){
           line=0;
           $("#main").html("");
         }
+        else if(text.substring(0,5)=="#size"){
+          $("body").attr("style","width:"+text.substring(5,text.length).split(",")[0]+"px;height:"+text.substring(5,text.length).split(",")[1]+"px")
+        }
       }
+      
     }
     setInterval('loadLogs()',20);
   </script>

@@ -1,3 +1,4 @@
+from cmath import log
 import datetime
 import json
 import os
@@ -21,9 +22,9 @@ from PyQt5.QtWidgets import *
 
 from betterLog import *
 from bot import *
-from gui import Ui_MainWindow
+from gui import Ui_Form
 
-class gui(QWidget,Ui_MainWindow):
+class gui(QWidget,Ui_Form):
   '''主窗口'''
   def __init__(self, parent=None):
     '''主窗口设置'''
@@ -32,6 +33,7 @@ class gui(QWidget,Ui_MainWindow):
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan_"+VERSION)
+    self.about_logo.setText("·Dylan Alpha·")
     self.tabWidget.setCurrentIndex(0)
     ############
     self.Panel_input.setDisabled(True)
@@ -40,9 +42,6 @@ class gui(QWidget,Ui_MainWindow):
     self.Panel_stop.setDisabled(True)
     self.Panel_forcestop.setDisabled(True)
     self.Bot_stop.setDisabled(True)
-    self.about_logo.setPixmap(QPixmap(icoPath))
-    self.about_logo.setScaledContents(True)
-    self.about_Dylan.setText("Dylan "+VERSION.split(' ',1)[0])
     self.pluginList.setSpacing(2)
     forms={
       "self":self,
@@ -101,6 +100,7 @@ class gui(QWidget,Ui_MainWindow):
       }, 
       "regularlist":self.regularlist
       }
+    self.resizeConsole()
     self.loadSetting()
     self.loadRegular()
     self.loadPlugins()
@@ -220,6 +220,7 @@ class gui(QWidget,Ui_MainWindow):
 
   def connectFunctions(self):
     '''连接组件与函数'''
+    self.timedTaskList.customContextMenuRequested.connect(self.createTimedTaskMenu)
     self.pluginList.customContextMenuRequested.connect(self.createPluginMenu)
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
     self.setting_selectfile.clicked.connect(lambda: self.selectFile(0))
@@ -233,6 +234,7 @@ class gui(QWidget,Ui_MainWindow):
     self.Bot_start.clicked.connect(lambda: self.botControl(1))
     self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
+    self.tabWidget.currentChanged.connect(self.resizeConsole)
 
   def createPluginMenu(self,pos):
     '''创建插件管理菜单'''
@@ -343,6 +345,84 @@ class gui(QWidget,Ui_MainWindow):
           )
     self.loadPlugins()
 
+  def createTimedTaskMenu(self,pos):
+    item = self.timedTaskList.indexAt(pos)
+    row=item.row()
+    self.timedTaskMenu = QMenu(self.timedTaskList)
+    self.addTask = QAction('添加任务',self.timedTaskList)
+    self.timedTaskMenu.addAction(self.addTask)
+    self.removeTask = QAction('删除任务',self.timedTaskList)
+    self.timedTaskMenu.addAction(self.removeTask)
+    self.removeAllTask = QAction('清空任务',self.timedTaskList)
+    self.timedTaskMenu.addAction(self.removeAllTask)
+    self.timedTaskMenu.addSeparator()
+    self.refreshTask = QAction('刷新',self.timedTaskList)
+    self.timedTaskMenu.addAction(self.refreshTask)
+    if row==-1:
+      self.removeTask.setDisabled(True)
+    if self.timedTaskList.rowCount()<=0:
+      self.removeAllTask.setDisabled(True)
+    self.addTask.triggered.connect(lambda: self.timedTaskManagement(1))
+    self.removeTask.triggered.connect(lambda: self.timedTaskManagement(2,row))
+    # self.refreshTask.triggered.connect(lambda: self.reloadTask())
+    # self.removeAllTask.triggered.connect(lambda: self.removeAllReg())
+    self.timedTaskMenu.popup(QCursor.pos())
+
+  def timedTaskManagement(self,type:int,row=-1):
+    if type==1:
+      self.timedTaskList.insertRow(0)
+    elif type==2 and row!=-1:
+      reply = QMessageBox.warning(
+      self,
+      'Dylan',
+      f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
+      QMessageBox.Yes | QMessageBox.No,
+      QMessageBox.No
+      )
+      if reply == QMessageBox.Yes:
+        self.timedTaskList.removeRow(row)
+
+  def createRegularMenu(self,pos):
+    '''创建正则管理页面的右键菜单'''
+    item = self.regularlist.indexAt(pos)
+    row=item.row()
+    self.regularMenu = QMenu(self.regularlist)
+    self.addRegular = QAction('添加记录',self.regularlist)
+    self.regularMenu.addAction(self.addRegular)
+    self.removeRegular = QAction('删除记录',self.regularlist)
+    self.regularMenu.addAction(self.removeRegular)
+    self.removeAllRegular = QAction('清空记录',self.regularlist)
+    self.regularMenu.addAction(self.removeAllRegular)
+    self.regularMenu.addSeparator()
+    self.refreshRegular = QAction('刷新',self.regularlist)
+    self.regularMenu.addAction(self.refreshRegular)
+    if row==-1:
+      self.removeRegular.setDisabled(True)
+    if self.regularlist.rowCount()<=0:
+      self.removeAllRegular.setDisabled(True)
+    self.addRegular.triggered.connect(lambda: self.regularManagement(1))
+    self.removeRegular.triggered.connect(lambda: self.regularManagement(2,row))
+    self.refreshRegular.triggered.connect(lambda: self.reloadRegular())
+    self.removeAllRegular.triggered.connect(lambda: self.removeAllReg())
+    self.regularMenu.popup(QCursor.pos())
+
+  def regularManagement(self,type,row=-1):
+    '''正则管理'''
+    if type==1:
+      self.regularlist.insertRow(0)
+      captureArea=QComboBox()
+      captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
+      self.regularlist.setCellWidget(0, 0, captureArea)
+    elif type==2 and row!=-1:
+      reply = QMessageBox.warning(
+      self,
+      'Dylan',
+      f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
+      QMessageBox.Yes | QMessageBox.No,
+      QMessageBox.No
+      )
+      if reply == QMessageBox.Yes:
+        self.regularlist.removeRow(row)
   def savePort(self):
     '''保存端口'''
     global sendPort,listenPort
@@ -579,49 +659,11 @@ class gui(QWidget,Ui_MainWindow):
       if startFile[0]!='':
         self.setting_botFilepath.setText(startFile[0])
 
-  def createRegularMenu(self,pos):
-    '''创建正则管理页面的右键菜单'''
-    item = self.regularlist.indexAt(pos)
-    row=item.row()
-    self.regularMenu = QMenu(self.regularlist)
-    self.addRegular = QAction('添加记录',self.regularlist)
-    self.regularMenu.addAction(self.addRegular)
-    self.removeRegular = QAction('删除记录',self.regularlist)
-    self.regularMenu.addAction(self.removeRegular)
-    self.removeAllRegular = QAction('清空记录',self.regularlist)
-    self.regularMenu.addAction(self.removeAllRegular)
-    self.regularMenu.addSeparator()
-    self.refreshRegular = QAction('刷新',self.regularlist)
-    self.regularMenu.addAction(self.refreshRegular)
-    if row==-1:
-      self.removeRegular.setDisabled(True)
-    if self.regularlist.rowCount()<=0:
-      self.removeAllRegular.setDisabled(True)
-    self.addRegular.triggered.connect(lambda: self.regularManagement(1))
-    self.removeRegular.triggered.connect(lambda: self.regularManagement(2,row))
-    self.refreshRegular.triggered.connect(lambda: self.reloadRegular())
-    self.removeAllRegular.triggered.connect(lambda: self.removeAllReg())
-    self.regularMenu.popup(QCursor.pos())
-
-  def regularManagement(self,type,row=-1):
-    '''
-    正则管理  type：操作类型（1=添加，2=删除）
-    '''
-    if type==1:
-      self.regularlist.insertRow(0)
-      captureArea=QComboBox()
-      captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
-      self.regularlist.setCellWidget(0, 0, captureArea)
-    elif type==2 and row!=-1:
-      reply = QMessageBox.warning(
-      self,
-      'Dylan',
-      f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
-      QMessageBox.Yes | QMessageBox.No,
-      QMessageBox.No
-      )
-      if reply == QMessageBox.Yes:
-        self.regularlist.removeRow(row)
+  def resizeConsole(self):
+    '''自动调整控制台窗口大小'''
+    global logQueue,botQueue
+    logQueue.put(f"#size{str(self.Panel_console.width()-2)},{str(self.Panel_console.height()-2)}")
+    botQueue.put(f"#size{str(self.Bot_console.width()-2)},{str(self.Bot_console.height()-2)}")
 
   def closeEvent(self, event):
     '''关闭事件'''
@@ -637,6 +679,10 @@ class gui(QWidget,Ui_MainWindow):
       closeBot()
       event.accept()
       sys.exit()
+    
+  def resizeEvent(self,event):
+    '''窗口大小改变'''
+    self.resizeConsole()
 
 class Functions(QObject):
   '''QtWeb通信模块'''
@@ -901,15 +947,18 @@ def server():
 
 def outputCommand(command:str):
   '''将指令输出至bds和控制台'''
-  global serverProcess,settings
-  try:
-    serverProcess.stdin.write(command+"\n")
-  except:
-    pass
+  global serverProcess,settings,serverState
   if settings["console"]["outputCommandToConsole"]:
     logQueue.put(">"+command)
   if settings["console"]["enableOutputToLog"]:
     logger(f"{str(datetime.datetime.now().time()).split('.')[0]} Command {command}")
+  if command=="start":
+    serverState=1
+  try:
+    serverProcess.stdin.write(command+"\n")
+  except:
+    pass
+  
 
 def startBot():
   '''机器人启动程序'''
@@ -974,7 +1023,7 @@ def startServer():
         break
     except:
       break
-    if forms!="" and not restart and serverState!=1:
+    if forms!=""and not restart and serverState!=1:
       forms["panel"]["start"].setDisabled(False)
       forms["panel"]["restart"].setDisabled(True)
       forms["panel"]["stop"].setDisabled(True)
