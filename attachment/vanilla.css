@@ -1,3 +1,9 @@
+/*
+* 说明：
+*  ".(any)"用于表示日志输出中方括号中的文本;
+*  "body#fusion_dark ..."表示为Fusion黑色模式下的文本;
+*  "body#fusion ..."表示为Fusion模式下的文本.
+*/
 .color30,.color40{
   color:#000000;
 }

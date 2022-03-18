@@ -1,4 +1,3 @@
-from cmath import log
 import datetime
 import json
 import os
@@ -16,7 +15,7 @@ import requests
 from flask import Flask, request
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
+from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -32,10 +31,9 @@ class gui(QWidget,Ui_Form):
     self.setupUi(self)
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
-    self.setWindowTitle("Dylan_"+VERSION)
+    self.setWindowTitle("Dylan "+VERSION)
     self.about_logo.setText("·Dylan Alpha·")
     self.tabWidget.setCurrentIndex(0)
-    ############
     self.Panel_input.setDisabled(True)
     self.Panel_start.setDisabled(False)
     self.Panel_restart.setDisabled(True)
@@ -97,18 +95,20 @@ class gui(QWidget,Ui_Form):
           "enableAnnouncement":self.setting_enableAnnouncement,
           "chosenTheme":self.setting_chosenTheme,
         }
-      }, 
-      "regularlist":self.regularlist
+      },
+      "regularlist":self.regularlist,
+      "timedTaskList":self.timedTaskList
       }
-    self.resizeConsole()
     self.loadSetting()
     self.loadRegular()
     self.loadPlugins()
+    self.loadTimedTask()
     self.connectFunctions()
 
   def showEvent(self, event):
-    '''启动时加载更新信息'''
+    '''启动时加载更新信息与初始化'''
     global settings,VERSION
+    self.resizeConsole()
     msgbox=QMessageBox(self)
     text=None
     failTimes=0
@@ -134,7 +134,7 @@ class gui(QWidget,Ui_Form):
         else:
           break
       except Exception as e:
-        print(e)
+        print(e,1)
         pass
       finally:
         failTimes+=1
@@ -213,9 +213,9 @@ class gui(QWidget,Ui_Form):
 
   def setHtml(self,theme):
     '''设置控制台主题'''
-    self.Panel_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=539&height=319&type=bds&theme={theme}"))
+    self.Panel_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?type=bds&theme={theme}"))
     self.Panel_console.page().setWebChannel(channel)
-    self.Bot_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?width=599&height=382&type=bot&theme={theme}"))
+    self.Bot_console.load(QUrl("file:///"+str(consolePath).replace('\\',"/")+f"?type=bot&theme={theme}"))
     self.Bot_console.page().setWebChannel(channel)
 
   def connectFunctions(self):
@@ -227,10 +227,11 @@ class gui(QWidget,Ui_Form):
     self.setting_logout.clicked.connect(lambda: self.botControl(3))
     self.setting_botSelectfile.clicked.connect(lambda: self.selectFile(1))
     self.setting_reset.clicked.connect(self.reset)
-    self.setting_reset.clicked.connect(self.reset)
     self.setting_savePort.clicked.connect(lambda:self.savePort())
     self.Panel_start.clicked.connect(lambda: self.serverControl(1))
     self.Panel_stop.clicked.connect(lambda: self.serverControl(2))
+    self.Panel_restart.clicked.connect(lambda: self.serverControl(3))
+    self.Panel_forcestop.clicked.connect(lambda: self.serverControl(4))
     self.Bot_start.clicked.connect(lambda: self.botControl(1))
     self.Bot_stop.clicked.connect(lambda: self.botControl(2))
     self.Panel_input.returnPressed.connect(self.transferCommand)
@@ -346,6 +347,7 @@ class gui(QWidget,Ui_Form):
     self.loadPlugins()
 
   def createTimedTaskMenu(self,pos):
+    '''创建定时任务菜单'''
     item = self.timedTaskList.indexAt(pos)
     row=item.row()
     self.timedTaskMenu = QMenu(self.timedTaskList)
@@ -365,10 +367,11 @@ class gui(QWidget,Ui_Form):
     self.addTask.triggered.connect(lambda: self.timedTaskManagement(1))
     self.removeTask.triggered.connect(lambda: self.timedTaskManagement(2,row))
     # self.refreshTask.triggered.connect(lambda: self.reloadTask())
-    # self.removeAllTask.triggered.connect(lambda: self.removeAllReg())
+    self.removeAllTask.triggered.connect(lambda: self.timedTaskManagement(3))
     self.timedTaskMenu.popup(QCursor.pos())
 
   def timedTaskManagement(self,type:int,row=-1):
+    '''定时任务管理'''
     if type==1:
       self.timedTaskList.insertRow(0)
     elif type==2 and row!=-1:
@@ -381,6 +384,34 @@ class gui(QWidget,Ui_Form):
       )
       if reply == QMessageBox.Yes:
         self.timedTaskList.removeRow(row)
+    elif type==3:
+      reply = QMessageBox.warning(
+        self,
+        'Dylan',
+        "确定要清空定时任务吗？\n他们将会永远失去！（真的很久！）",
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.No
+        )
+      if reply == QMessageBox.Yes:
+        for i in range(self.timedTaskList.rowCount()):
+          self.timedTaskList.removeRow(0)
+    elif type==4:
+      for i in range(self.timedTaskList.rowCount()):
+        self.timedTaskList.removeRow(0)
+
+  def loadTimedTask(self):
+    '''加载定时任务'''
+    for i in datas:
+      if i=="timedTaskList":
+        for task in datas["timedTaskList"]:
+          try:
+            self.timedTaskList.insertRow(0)
+            self.timedTaskList.setItem(0,0,QTableWidgetItem(task["name"]))
+            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["expression"]))
+            self.timedTaskList.setItem(0,2,QTableWidgetItem(task["remark"]))
+            self.timedTaskList.setItem(0,3,QTableWidgetItem(task["command"]))
+          except:
+            pass
 
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
@@ -423,6 +454,64 @@ class gui(QWidget,Ui_Form):
       )
       if reply == QMessageBox.Yes:
         self.regularlist.removeRow(row)
+        
+  def addSingelRegular(self,type=str):
+    '''读取时添加正则记录'''
+    if type=="disabled":
+      typeIndex=0
+    elif type=="private_admin":
+      typeIndex=1
+    elif type=="private":
+      typeIndex=2
+    elif type=="group_admin":
+      typeIndex=3
+    elif type=="group":
+      typeIndex=4
+    elif type=="console":
+      typeIndex=5
+    for i in datas:
+      if i=="regular":
+        for a in datas["regular"][type]:
+          try:
+            self.regularlist.insertRow(0)
+            captureArea=QComboBox()
+            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
+            captureArea.setCurrentIndex(typeIndex)
+            self.regularlist.setCellWidget(0, 0, captureArea)
+            self.regularlist.setItem(0,1,QTableWidgetItem(a["regular"]))
+            self.regularlist.setItem(0,2,QTableWidgetItem(a["remark"]))
+            self.regularlist.setItem(0,3,QTableWidgetItem(a["command"]))
+          except:
+            pass
+
+  def loadRegular(self):
+    '''加载正则记录'''
+    self.addSingelRegular("group")
+    self.addSingelRegular("group_admin")
+    self.addSingelRegular("private")
+    self.addSingelRegular("private_admin")
+    self.addSingelRegular("disabled")
+    self.addSingelRegular("console")
+
+  def removeAllReg(self):
+    '''删除所有正则记录'''
+    reply = QMessageBox.warning(
+      self,
+      'Dylan',
+      "确定要清空所有记录吗？\n他们将会永远失去！（真的很久！）",
+      QMessageBox.Yes | QMessageBox.No,
+      QMessageBox.No
+      )
+    if reply == QMessageBox.Yes:
+      for i in range(self.regularlist.rowCount()):
+        self.regularlist.removeRow(0)
+
+  def reloadRegular(self):
+    '''重载正则记录'''
+    for i in range(self.regularlist.rowCount()):
+      self.regularlist.removeRow(0)
+    self.loadRegular()
+
   def savePort(self):
     '''保存端口'''
     global sendPort,listenPort
@@ -490,7 +579,7 @@ class gui(QWidget,Ui_Form):
       dark_palette.setColor(QPalette.Text, QColor(255,255,255))
       dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
       dark_palette.setColor(QPalette.Disabled,QPalette.Button, QColor(30,30,30))
-      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(27,27,27))
+      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(100,100,100))
       dark_palette.setColor(QPalette.ButtonText, QColor(255,255,255))
       dark_palette.setColor(QPalette.BrightText, QColor(255,0,0))
       dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
@@ -500,63 +589,6 @@ class gui(QWidget,Ui_Form):
       qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
       self.setHtml("fusion_dark")
 
-  def addSingelRegular(self,type=str):
-    '''读取时添加正则记录'''
-    if type=="disabled":
-      typeIndex=0
-    elif type=="private_admin":
-      typeIndex=1
-    elif type=="private":
-      typeIndex=2
-    elif type=="group_admin":
-      typeIndex=3
-    elif type=="group":
-      typeIndex=4
-    elif type=="console":
-      typeIndex=5
-    for i in datas:
-      if i=="regular":
-        for a in datas["regular"][type]:
-          try:
-            self.regularlist.insertRow(0)
-            captureArea=QComboBox()
-            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
-            captureArea.setCurrentIndex(typeIndex)
-            self.regularlist.setCellWidget(0, 0, captureArea)
-            self.regularlist.setItem(0,1,QTableWidgetItem(a["regular"]))
-            self.regularlist.setItem(0,2,QTableWidgetItem(a["remark"]))
-            self.regularlist.setItem(0,3,QTableWidgetItem(a["command"]))
-          except:
-            pass
-
-  def loadRegular(self):
-    '''加载正则记录'''
-    self.addSingelRegular("group")
-    self.addSingelRegular("group_admin")
-    self.addSingelRegular("private")
-    self.addSingelRegular("private_admin")
-    self.addSingelRegular("disabled")
-    self.addSingelRegular("console")
-
-  def removeAllReg(self):
-    '''删除所有正则记录'''
-    reply = QMessageBox.warning(
-      self,
-      'Dylan',
-      "确定要清空所有记录吗？\n他们将会永远失去！（真的很久！）",
-      QMessageBox.Yes | QMessageBox.No,
-      QMessageBox.No
-      )
-    if reply == QMessageBox.Yes:
-      for i in range(self.regularlist.rowCount()):
-        self.regularlist.removeRow(0)
-
-  def reloadRegular(self):
-    '''重载正则记录'''
-    for i in range(self.regularlist.rowCount()):
-      self.regularlist.removeRow(0)
-    self.loadRegular()
-
   def transferCommand(self):
     '''转发输入命令'''
     text=self.Panel_input.text()
@@ -565,7 +597,7 @@ class gui(QWidget,Ui_Form):
 
   def serverControl(self,type):
     '''服务器控制按钮'''
-    global serverState,commandQueue,restart
+    global serverState,commandQueue,restart,serverProcess,settings,stopFlag
     if type==1 and serverState!=1:
       while not commandQueue.empty():
         commandQueue.get()
@@ -581,9 +613,43 @@ class gui(QWidget,Ui_Form):
         self.Panel_start.setDisabled(True)
         self.Panel_stop.setDisabled(False)
         self.Panel_input.setDisabled(False)
+        self.Panel_forcestop.setDisabled(False)
+        self.Panel_restart.setDisabled(False)
     elif type==2:
       restart=False
       outputCommand("stop")
+    elif type==3:
+      restart=True
+      outputCommand("stop")
+    elif type==4:
+      reply = QMessageBox.warning(
+        self,
+        'Dylan',
+        "确定要强制结束进程吗？\n可能导致存档丢失等问题",
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.No
+        )
+      if serverProcess!=-1 and reply == QMessageBox.Yes:
+        try:
+          process=psutil.Process(serverProcess.pid)
+          while True:
+            if process.name()!="cmd.exe":
+              process.terminate()
+              stopFlag=-1
+              break
+            else:
+              if process.children()!=[]:
+                process=process.children()[0]
+              else:
+                break
+        except Exception as e:
+          QMessageBox.information(
+            self,
+            "Dylan",
+            f"强制结束进程失败\n{e}",
+            QMessageBox.Yes
+          )
+        
 
   def botControl(self,type):
     '''bot控制'''
@@ -679,7 +745,7 @@ class gui(QWidget,Ui_Form):
       closeBot()
       event.accept()
       sys.exit()
-    
+
   def resizeEvent(self,event):
     '''窗口大小改变'''
     self.resizeConsole()
@@ -735,7 +801,8 @@ def componentInformation():
           "group":[],
           "group_admin":[],
           "console":[]
-        }
+        },
+        "timedTaskList":[]
       }
       rows=forms["regularlist"].rowCount()
       if rows>0:
@@ -769,6 +836,31 @@ def componentInformation():
               "regular":regular,
               "command":command,
               "remark":remark
+            })
+      rows=forms["timedTaskList"].rowCount()
+      if rows>0:
+        for singleRow in range(rows):
+          if forms["timedTaskList"].item(singleRow,0):
+            name=forms["timedTaskList"].item(singleRow,0).text()
+          else:
+            name=""
+          if forms["timedTaskList"].item(singleRow,1):
+            expression=forms["timedTaskList"].item(singleRow,1).text()
+          else:
+            expression=""
+          if forms["timedTaskList"].item(singleRow,2):
+            remark=forms["timedTaskList"].item(singleRow,2).text()
+          else:
+            remark=""
+          if forms["timedTaskList"].item(singleRow,3):
+            command=forms["timedTaskList"].item(singleRow,3).text()
+          else:
+            command=""
+          datas["timedTaskList"].append({
+              "name":name,
+              "command":command,
+              "remark":remark,
+              "expression":expression
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
@@ -830,7 +922,7 @@ def logger(text:str):
 
 def server():
   '''服务器输出读取和状态监控'''
-  global serverProcess,serverState,forms,commandQueue,restart
+  global serverProcess,serverState,forms,commandQueue,restart,stopFlag
   forms["setting"]["start"]["selectfile"].setDisabled(True)
   forms["setting"]["start"]["filepath"].setDisabled(True)
   serverState=1
@@ -856,7 +948,6 @@ def server():
       log=serverProcess.stdout.readline()
     except:
       pass
-    
     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
       regQueue.put({
         "log":outputRecognition(log),
@@ -916,6 +1007,8 @@ def server():
         logQueue.put("<br>")
         if stopFlag>0:
           logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程已退出"))
+        elif stopFlag==-1:
+          logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程被强制结束"))
         else:
           logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程疑似异常终止"))
         time.sleep(0.05)
@@ -926,13 +1019,15 @@ def server():
         forms["panel"]["state"].setText("未启动")
         forms["panel"]["version"].setText("-")
         forms["panel"]["input"].setText("")
+        forms["panel"]["restart"].setDisabled(True)
+        forms["panel"]["forcestop"].setDisabled(True)
         forms["panel"]["input"].setDisabled(True)
+        time.sleep(0.1)
         if restart:
           break
         forms["panel"]["start"].setDisabled(False)
         forms["panel"]["restart"].setDisabled(True)
         forms["panel"]["stop"].setDisabled(True)
-        forms["panel"]["forcestop"].setDisabled(True)
         forms["setting"]["start"]["selectfile"].setDisabled(False)
         forms["setting"]["start"]["filepath"].setDisabled(False)
         break
@@ -951,14 +1046,16 @@ def outputCommand(command:str):
   if settings["console"]["outputCommandToConsole"]:
     logQueue.put(">"+command)
   if settings["console"]["enableOutputToLog"]:
-    logger(f"{str(datetime.datetime.now().time()).split('.')[0]} Command {command}")
-  if command=="start":
+    logger(f"{str(datetime.datetime.now().time()).split('.')[0]} COMMAND {command}")
+  if command=="#start":
     serverState=1
-  try:
-    serverProcess.stdin.write(command+"\n")
-  except:
-    pass
-  
+  elif command=="#refresh":
+    logQueue.put(command)
+  else:
+    try:
+      serverProcess.stdin.write(command+"\n")
+    except:
+      pass
 
 def startBot():
   '''机器人启动程序'''
@@ -987,11 +1084,11 @@ def startBot():
           qrpath=os.path.join(os.path.split(settings["bot"]["botFilepath"])[0],"qrcode.png")
           if os.path.exists(qrpath):
             os.system(qrpath)
-        if not re.search('^[\n\s\r]+?$',log) and log!="":
+        if not re.search('^[\n\s\r]$',log) and log!="":
           log=outputRecognition(log)
           log=escapeLog(log)
           log=colorLog(log,2)
-          botQueue.put(log)
+          botQueue.put("<span class='noColor'>"+log+"</span>")
           if log.find("请输入你需要的编号")>=0 :
             time.sleep(1)
             botProcess.stdin.write("0\n")
@@ -1123,6 +1220,7 @@ if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
   VERSION="Alpha 1.9.20220316"
+  serverProcess=-1
   restart=False
   newVersion=None
   stopSavingSetting=False
@@ -1156,7 +1254,7 @@ if __name__=="__main__":
         settings={}
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
-    sys.exit() 
+    sys.exit()
   if not os.path.exists(os.path.join(selfPath,"log")):
     os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)

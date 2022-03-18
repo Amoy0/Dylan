@@ -4,33 +4,33 @@
 *  "body#fusion_dark ..."表示为Fusion黑色模式下的文本;
 *  "body#fusion ..."表示为Fusion模式下的文本.
 */
-.noColor .file{
+.noColor>.file{
   color:#688292
 }
-.noColor .server{
+.noColor>.server{
   color:#8bd645
 }
-.noColor .debug{
+.noColor>.debug{
   color:#865FC5;
 }
-.noColor .error{
+.noColor>.error{
   color:#D16969;
 }
-.noColor .warn{
+.noColor>.warn{
   color:#aa5612;
 }
-.noColor .info{
+.noColor>.info{
   color:#20B2AA;
 }
-.noColor .LiteLoader,.noColor .LiteXLoader,.noColor .LLMoney{
+.noColor>.plugins{
+  color:#e4b44c;
+}
+.noColor>.LiteLoader,.noColor>.LiteXLoader,.noColor>.LLMoney{
   color:#5a93c2 ;
 }
-.noColor .Chakra{
-  color:#5555FF;
+.noColor>.Chakra{
+  color:#a93eca;
 }
-.noColor .int{
+.noColor>.int{
   color:#b1ac64;
-}
-.noColor .plugins{
-  color:#e4b44c;
 }

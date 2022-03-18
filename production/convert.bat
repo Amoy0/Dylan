@@ -1,1 +1,1 @@
-pyuic5 -o ./../gui.py ./../untitled.ui
+pyuic5 -o ./../gui.py ./../gui.ui

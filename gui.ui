@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>670</width>
+    <width>850</width>
     <height>490</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>670</width>
+    <width>680</width>
     <height>490</height>
    </size>
   </property>
@@ -1016,8 +1016,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>611</width>
-            <height>716</height>
+            <width>791</width>
+            <height>721</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout">
@@ -1049,8 +1049,8 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>155</width>
-                  <height>0</height>
+                  <width>154</width>
+                  <height>98</height>
                  </size>
                 </property>
                 <widget class="QLabel" name="setting_port1">
@@ -1307,7 +1307,7 @@
              <property name="minimumSize">
               <size>
                <width>0</width>
-               <height>83</height>
+               <height>88</height>
               </size>
              </property>
              <property name="title">
@@ -1317,7 +1317,7 @@
               <property name="geometry">
                <rect>
                 <x>16</x>
-                <y>23</y>
+                <y>30</y>
                 <width>78</width>
                 <height>16</height>
                </rect>
@@ -1330,7 +1330,7 @@
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>23</y>
+                <y>30</y>
                 <width>114</width>
                 <height>17</height>
                </rect>
@@ -1352,7 +1352,7 @@
               <property name="geometry">
                <rect>
                 <x>16</x>
-                <y>46</y>
+                <y>50</y>
                 <width>160</width>
                 <height>20</height>
                </rect>
@@ -1391,7 +1391,7 @@
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>47</y>
+                <y>50</y>
                 <width>166</width>
                 <height>17</height>
                </rect>
@@ -1652,7 +1652,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Dylan Alpha</string>
+          <string>Dylan</string>
          </property>
          <property name="margin">
           <number>10</number>
