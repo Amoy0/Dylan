@@ -8,20 +8,22 @@ import subprocess
 import sys
 import threading
 import time
-
+import traceback
 import psutil
 import PyQt5
 import requests
 from flask import Flask, request
+from py_cron_schedule import CronFormatError, CronSchedule
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette
+from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette,QBrush
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
 from betterLog import *
-from bot import *
+from reg import *
 from gui import Ui_Form
+from command import *
 
 class gui(QWidget,Ui_Form):
   '''主窗口'''
@@ -104,6 +106,8 @@ class gui(QWidget,Ui_Form):
     self.loadPlugins()
     self.loadTimedTask()
     self.connectFunctions()
+    self.checkRegular()
+    self.checkTasks()
 
   def showEvent(self, event):
     '''启动时加载更新信息与初始化'''
@@ -220,6 +224,10 @@ class gui(QWidget,Ui_Form):
 
   def connectFunctions(self):
     '''连接组件与函数'''
+    self.regularlist.itemChanged.connect(self.checkRegular)
+    self.timedTaskList.itemChanged.connect(self.checkTasks)
+    self.regularlist.itemClicked.connect(self.checkRegular)
+    self.timedTaskList.itemClicked.connect(self.checkTasks)
     self.timedTaskList.customContextMenuRequested.connect(self.createTimedTaskMenu)
     self.pluginList.customContextMenuRequested.connect(self.createPluginMenu)
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
@@ -407,12 +415,22 @@ class gui(QWidget,Ui_Form):
           try:
             self.timedTaskList.insertRow(0)
             self.timedTaskList.setItem(0,0,QTableWidgetItem(task["name"]))
-            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["expression"]))
+            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["cron"]))
             self.timedTaskList.setItem(0,2,QTableWidgetItem(task["remark"]))
             self.timedTaskList.setItem(0,3,QTableWidgetItem(task["command"]))
           except:
             pass
-
+  
+  def checkTasks(self):
+    taskNameList=[]
+    for singleRow in range(self.timedTaskList.rowCount()):
+      name=self.timedTaskList.item(singleRow,0).text()
+      if name in taskNameList:
+        self.timedTaskList.item(singleRow,0).setBackground(QColor(255,0,0,40))
+      else:
+        self.timedTaskList.item(singleRow,0).setBackground((QColor(0,0,0,0)))
+        taskNameList.append(name)
+    
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
     item = self.regularlist.indexAt(pos)
@@ -454,7 +472,15 @@ class gui(QWidget,Ui_Form):
       )
       if reply == QMessageBox.Yes:
         self.regularlist.removeRow(row)
-        
+
+  def checkRegular(self):
+    for singleRow in range(self.regularlist.rowCount()):
+      try:
+        re.findall(self.regularlist.item(singleRow,1).text(),"test")
+        self.regularlist.item(singleRow,1).setBackground((QColor(0,0,0,0)))
+      except:
+        self.regularlist.item(singleRow,1).setBackground(QColor(255,0,0,40))
+
   def addSingelRegular(self,type=str):
     '''读取时添加正则记录'''
     if type=="disabled":
@@ -780,7 +806,7 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished
+  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished,tasks
   UiFinished=False
   while True:
     time.sleep(1)
@@ -845,9 +871,9 @@ def componentInformation():
           else:
             name=""
           if forms["timedTaskList"].item(singleRow,1):
-            expression=forms["timedTaskList"].item(singleRow,1).text()
+            cron=forms["timedTaskList"].item(singleRow,1).text()
           else:
-            expression=""
+            cron=""
           if forms["timedTaskList"].item(singleRow,2):
             remark=forms["timedTaskList"].item(singleRow,2).text()
           else:
@@ -860,7 +886,7 @@ def componentInformation():
               "name":name,
               "command":command,
               "remark":remark,
-              "expression":expression
+              "cron":cron
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
@@ -906,13 +932,19 @@ def componentInformation():
         jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
       regQueue.put(settings)
       regQueue.put(datas)
-      if serverState==1 and not commandQueue.empty():
-        outputCommand(commandQueue.get())
+      tasks.stop()
     try:
       if MainWindow.isVisible():
         UiFinished=True
     except:
       continue
+
+def inputCommand():
+  global serverState,commandQueue
+  while True:
+    if serverState==1 and not commandQueue.empty():
+      outputCommand(commandQueue.get())
+    time.sleep(0.1)
 
 def logger(text:str):
   '''控制台消息输出'''
@@ -1139,6 +1171,27 @@ def startServer():
       server()
   sys.exit()
 
+def runTasks():
+  global datas,settings,commandQueue,tasks
+  while True:
+    tasks=CronSchedule()
+    taskName=[]
+    i=0
+    for task in datas["timedTaskList"]:
+      name=task["name"]
+      if name in taskName or task["cron"]=="":
+        continue
+      else:
+        taskName.append(name)
+      tasks.add_task(
+          name,
+          task["cron"],
+          lambda:cmdProcess(commandQueue,settings,datas["timedTaskList"][i]["command"])
+        )
+    i+=1
+    tasks.start()
+    pass
+
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
   global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
@@ -1158,6 +1211,7 @@ def statusMonitoring():
           forms["bot"]["receive"].setText(str(MessageReceived))
     except:
       break
+
 httpServer = Flask(__name__)
 
 @httpServer.route('/', methods=["POST"])
@@ -1173,7 +1227,7 @@ def post_data():
   elif request.get_json().get('message_type') == 'private' or request.get_json().get('message_type') == 'group':
     regQueue.put(request.get_json())
     if settings["bot"]["enableOutputMsgToLog"]:
-      with open(os.path.join(selfPath,"log",f"msg-{datetime.date.today()}.csv"),"a") as csv:
+      with open(os.path.join(selfPath,"log",f"msg-{datetime.date.today()}.tasksv"),"a") as tasksv:
         writeList=[
           time.time(),
           datetime.datetime.now().time(),
@@ -1194,7 +1248,7 @@ def post_data():
             text=i
           else:
             text=f'{text},"{i}"'
-        csv.write(text+"\n")
+        tasksv.write(text+"\n")
     return 'ok'
 
 def runHttp():
@@ -1231,6 +1285,7 @@ if __name__=="__main__":
   botQueue=queue.Queue(maxsize=0)
   regQueue=queue.Queue(maxsize=0)
   commandQueue=queue.Queue(maxsize=0)
+  tasks = CronSchedule()
   permissionList=[]
   qq=0
   serverState=0
@@ -1269,4 +1324,8 @@ if __name__=="__main__":
   botThread.start()
   msgThread=threading.Thread(target=lambda:messageProcessing(regQueue,commandQueue),daemon=True)
   msgThread.start()
+  cmdThread=threading.Thread(target=inputCommand,daemon=True)
+  cmdThread.start()
+  cronThread=threading.Thread(target=runTasks,daemon=True)
+  cronThread.start()
   mainGui()

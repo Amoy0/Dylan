@@ -26,6 +26,9 @@
    <string>Dylan</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <property name="topMargin">
+    <number>7</number>
+   </property>
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="font">
@@ -710,12 +713,12 @@
          </attribute>
          <column>
           <property name="text">
-           <string>捕获域 *</string>
+           <string>捕获域</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>正则表达式 *</string>
+           <string>正则表达式</string>
           </property>
          </column>
          <column>
@@ -725,7 +728,7 @@
          </column>
          <column>
           <property name="text">
-           <string>执行命令 *</string>
+           <string>执行命令</string>
           </property>
          </column>
         </widget>
@@ -759,12 +762,12 @@
          </attribute>
          <column>
           <property name="text">
-           <string>名称 *</string>
+           <string>名称</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>Cron表达式 *</string>
+           <string>Cron表达式</string>
           </property>
          </column>
          <column>
@@ -774,7 +777,7 @@
          </column>
          <column>
           <property name="text">
-           <string>执行命令 *</string>
+           <string>执行命令</string>
           </property>
          </column>
         </widget>
