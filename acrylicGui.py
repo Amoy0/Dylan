@@ -1,4 +1,4 @@
-from my_window_effect import WindowEffect
+from windowEffect import WindowEffect
 from PyQt5.QtCore import QEvent,Qt
 from PyQt5.QtWidgets import QMenu
 

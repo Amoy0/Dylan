@@ -10,7 +10,7 @@ import threading
 import time
 from ctypes import cdll
 from ctypes.wintypes import DWORD, HWND
-from my_window_effect import WindowEffect
+from windowEffect import WindowEffect
 from acrylicGui import Menu
 import psutil
 import PyQt5
