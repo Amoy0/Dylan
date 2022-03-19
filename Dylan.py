@@ -1377,7 +1377,7 @@ if __name__=="__main__":
   app.processEvents()
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.9.20210316"
+  VERSION="Alpha 2.0.20220319"
   serverProcess=-1
   restart=False
   newVersion=None
