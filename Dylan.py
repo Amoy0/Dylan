@@ -16,7 +16,6 @@ import psutil
 import PyQt5
 import requests
 from flask import Flask, request
-from py_cron_schedule import CronFormatError, CronSchedule
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, Qt, QUrl, pyqtSlot
 from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
@@ -505,6 +504,7 @@ class gui(QWidget,Ui_Form):
 
   def addSingelRegular(self,type=str):
     '''读取时添加正则记录'''
+    global regularList
     if regularList.get(type)==None:
       return False
     if type=="disabled":
@@ -951,7 +951,9 @@ def componentInformation():
       rows=forms["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
-          type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
+          if forms["timedTaskList"].cellWidget(singleRow,0):
+            type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
+            continue
           if forms["timedTaskList"].item(singleRow,1):
             value=forms["timedTaskList"].item(singleRow,1).text()
           else:
@@ -1256,26 +1258,6 @@ def runTasks():
   global datas,settings,commandQueue,tasks
   while True:
     time.sleep(0.1)
-    tasks=CronSchedule()
-    taskName=[]
-    i=0
-    if datas.get("timedTaskList")==None:
-      continue
-    for task in datas["timedTaskList"]:
-      name=task["name"]
-      if name in taskName or task["cron"]=="":
-        continue
-      else:
-        taskName.append(name)
-      tasks.add_task(
-          name,
-          task["cron"],
-          lambda:cmdProcess(commandQueue,settings,eval(datas["timedTaskList"][i]["command"]))
-        )
-    i+=1
-    if taskName!=[]:
-      tasks.start()
-    pass
 
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
@@ -1358,34 +1340,11 @@ def mainGui():
   sys.exit(app.exec_())
 
 if __name__=="__main__":
-  app=QtWidgets.QApplication(sys.argv)
-  splashWindow=splash()
-  splashWindow.setAttribute(Qt.WA_TranslucentBackground)
-  splashWindow.setPixmap(QPixmap('attachment/ico.png')) 
-  splashWindow.show()
-  app.processEvents()
-  channel = QWebChannel()
-  Function = Functions()
-  VERSION="Alpha 1.9.20210316"
-  serverProcess=-1
-  restart=False
-  newVersion=None
-  stopSavingSetting=False
   selfPath=os.path.dirname(os.path.realpath(sys.argv[0]))
-  consolePath=os.path.join(selfPath,"attachment","console.html")
-  icoPath=os.path.join(selfPath,"attachment","ico.png")
-  logQueue=queue.Queue(maxsize=0)
-  botQueue=queue.Queue(maxsize=0)
-  regQueue=queue.Queue(maxsize=0)
-  commandQueue=queue.Queue(maxsize=0)
-  tasks = CronSchedule()
-  permissionList=[]
-  qq=0
-  serverState=0
-  botState=0
-  forms=""
   if not os.path.exists(os.path.join(selfPath,"datas.json")):
     datas={}
+    regularList={}
+    taskList=[]
   else:
     with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8') as jsonFile:
       try:
@@ -1400,6 +1359,8 @@ if __name__=="__main__":
           regularList={}
       except:
         datas={}
+        regularList={}
+        taskList=[]
   if not os.path.exists(os.path.join(selfPath,"setting.json")):
     settings={}
   else:
@@ -1408,6 +1369,31 @@ if __name__=="__main__":
         settings=json.load(jsonFile)
       except:
         settings={}
+  app=QtWidgets.QApplication(sys.argv)
+  splashWindow=splash()
+  splashWindow.setAttribute(Qt.WA_TranslucentBackground)
+  splashWindow.setPixmap(QPixmap('attachment/ico.png')) 
+  splashWindow.show()
+  app.processEvents()
+  channel = QWebChannel()
+  Function = Functions()
+  VERSION="Alpha 1.9.20210316"
+  serverProcess=-1
+  restart=False
+  newVersion=None
+  stopSavingSetting=False
+  consolePath=os.path.join(selfPath,"attachment","console.html")
+  icoPath=os.path.join(selfPath,"attachment","ico.png")
+  logQueue=queue.Queue(maxsize=0)
+  botQueue=queue.Queue(maxsize=0)
+  regQueue=queue.Queue(maxsize=0)
+  commandQueue=queue.Queue(maxsize=0)
+  permissionList=[]
+  qq=0
+  serverState=0
+  botState=0
+  forms=""
+  
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
     sys.exit()
