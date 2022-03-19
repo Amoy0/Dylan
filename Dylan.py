@@ -9,21 +9,29 @@ import sys
 import threading
 import time
 import traceback
+from ctypes import cdll
+from ctypes.wintypes import HWND,DWORD
+
 import psutil
 import PyQt5
 import requests
 from flask import Flask, request
 from py_cron_schedule import CronFormatError, CronSchedule
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette,QBrush
+from PyQt5.QtCore import QObject, Qt, QUrl, pyqtSlot
+from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap,QBrush
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
 from betterLog import *
-from reg import *
-from gui import Ui_Form
 from command import *
+from gui import Ui_Form
+from reg import *
+
+
+class splash(QSplashScreen):
+  def mousePressEvent(self, event):
+    pass
 
 class gui(QWidget,Ui_Form):
   '''主窗口'''
@@ -31,8 +39,10 @@ class gui(QWidget,Ui_Form):
     '''主窗口设置'''
     super(gui, self).__init__(parent)
     self.setupUi(self)
+    	
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
+    # self.setAttribute(Qt.WA_TranslucentBackground)
     self.setWindowTitle("Dylan "+VERSION)
     self.about_logo.setText("·Dylan Alpha·")
     self.tabWidget.setCurrentIndex(0)
@@ -614,6 +624,23 @@ class gui(QWidget,Ui_Form):
       qApp.setPalette(dark_palette)
       qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
       self.setHtml("fusion_dark")
+    elif themeId==3:
+      # qApp.setStyle("Fusion")
+      self.pluginList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      self.regularlist.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      self.timedTaskList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      self.setting_scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      self.setHtml("fusion")
+      self.setting_scrollArea.setStyleSheet(
+        "#setting_scrollAreaWidgetContents{background:rgba(255,255,255,0);}")
+      self.setStyleSheet(
+        "background-color: transparent;")
+      self.tabWidget.setStyleSheet(
+        "QButton{background-color:#f00}QWidget{background:transparent} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
+      self.setAttribute(Qt.WA_TranslucentBackground)
+      self.bgColor = QColor(255,255,255,0.9) 
+      hWnd = HWND(int(self.winId()))
+      cdll.LoadLibrary('./attachment/aeroDll.Dll').setBlur(hWnd)
 
   def transferCommand(self):
     '''转发输入命令'''
@@ -1174,9 +1201,12 @@ def startServer():
 def runTasks():
   global datas,settings,commandQueue,tasks
   while True:
+    time.sleep(0.1)
     tasks=CronSchedule()
     taskName=[]
     i=0
+    if datas.get("timedTaskList")==None:
+      continue
     for task in datas["timedTaskList"]:
       name=task["name"]
       if name in taskName or task["cron"]=="":
@@ -1189,7 +1219,8 @@ def runTasks():
           lambda:cmdProcess(commandQueue,settings,datas["timedTaskList"][i]["command"])
         )
     i+=1
-    tasks.start()
+    if taskName!=[]:
+      tasks.start()
     pass
 
 def statusMonitoring():
@@ -1264,13 +1295,21 @@ def runHttp():
 def mainGui():
   '''主窗口'''
   global MainWindow
-  app=QtWidgets.QApplication(sys.argv)
+  app.processEvents()
   app.setWindowIcon(QIcon(icoPath))
   MainWindow=gui()
   MainWindow.show()
+  splashWindow.finish(MainWindow)
+  splashWindow.deleteLater()
   sys.exit(app.exec_())
 
 if __name__=="__main__":
+  app=QtWidgets.QApplication(sys.argv)
+  splashWindow=splash()
+  splashWindow.setAttribute(Qt.WA_TranslucentBackground)
+  splashWindow.setPixmap(QPixmap('attachment/ico.png')) 
+  splashWindow.show()
+  app.processEvents()
   channel = QWebChannel()
   Function = Functions()
   VERSION="Alpha 1.9.20220316"
@@ -1322,7 +1361,7 @@ if __name__=="__main__":
   botHttpThread.start()
   botThread=threading.Thread(target=startBot,daemon=True)
   botThread.start()
-  msgThread=threading.Thread(target=lambda:messageProcessing(regQueue,commandQueue),daemon=True)
+  msgThread=threading.Thread(target=lambda:regProcessing(regQueue,commandQueue),daemon=True)
   msgThread.start()
   cmdThread=threading.Thread(target=inputCommand,daemon=True)
   cmdThread.start()

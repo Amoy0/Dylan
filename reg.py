@@ -3,7 +3,7 @@ import time
 from queue import *
 from command import *
 
-def messageProcessing(regQueue:Queue,commandQueue:Queue):
+def regProcessing(regQueue:Queue,commandQueue:Queue):
   '''消息处理'''
   global datas,settings
   while True:

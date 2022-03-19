@@ -1516,6 +1516,11 @@
                 <string>Fusion（深色）</string>
                </property>
               </item>
+              <item>
+               <property name="text">
+                <string>亚克力（Beta）</string>
+               </property>
+              </item>
              </widget>
              <widget class="QLabel" name="setting_theme">
               <property name="geometry">
