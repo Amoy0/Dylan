@@ -8,10 +8,10 @@ import subprocess
 import sys
 import threading
 import time
-import traceback
 from ctypes import cdll
-from ctypes.wintypes import HWND,DWORD
-
+from ctypes.wintypes import DWORD, HWND
+from my_window_effect import WindowEffect
+from acrylicGui import Menu
 import psutil
 import PyQt5
 import requests
@@ -19,7 +19,7 @@ from flask import Flask, request
 from py_cron_schedule import CronFormatError, CronSchedule
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, Qt, QUrl, pyqtSlot
-from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap,QBrush
+from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
@@ -42,7 +42,6 @@ class gui(QWidget,Ui_Form):
     	
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
-    # self.setAttribute(Qt.WA_TranslucentBackground)
     self.setWindowTitle("Dylan "+VERSION)
     self.about_logo.setText("·Dylan Alpha·")
     self.tabWidget.setCurrentIndex(0)
@@ -117,7 +116,6 @@ class gui(QWidget,Ui_Form):
     self.loadTimedTask()
     self.connectFunctions()
     self.checkRegular()
-    self.checkTasks()
 
   def showEvent(self, event):
     '''启动时加载更新信息与初始化'''
@@ -235,9 +233,7 @@ class gui(QWidget,Ui_Form):
   def connectFunctions(self):
     '''连接组件与函数'''
     self.regularlist.itemChanged.connect(self.checkRegular)
-    self.timedTaskList.itemChanged.connect(self.checkTasks)
     self.regularlist.itemClicked.connect(self.checkRegular)
-    self.timedTaskList.itemClicked.connect(self.checkTasks)
     self.timedTaskList.customContextMenuRequested.connect(self.createTimedTaskMenu)
     self.pluginList.customContextMenuRequested.connect(self.createPluginMenu)
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
@@ -259,7 +255,10 @@ class gui(QWidget,Ui_Form):
     '''创建插件管理菜单'''
     global serverState
     row = self.pluginList.currentRow()
-    self.pluginMenu = QMenu(self.pluginList)
+    if self.themeId==3:
+      self.pluginMenu = Menu(parent=self.pluginList)
+    else:
+      self.pluginMenu = QMenu(parent=self.pluginList)
     self.addPlugin = QAction('导入插件',self.pluginList)
     self.pluginMenu.addAction(self.addPlugin)
     self.removePlugin = QAction('删除插件',self.pluginList)
@@ -311,7 +310,6 @@ class gui(QWidget,Ui_Form):
           )
         self.loadPlugins()
     elif type==2 and self.pluginsPath!=None:
-
       if item.text()[0]=="*":
         fileName=item.text()[5:]
       else:
@@ -368,7 +366,10 @@ class gui(QWidget,Ui_Form):
     '''创建定时任务菜单'''
     item = self.timedTaskList.indexAt(pos)
     row=item.row()
-    self.timedTaskMenu = QMenu(self.timedTaskList)
+    if self.themeId==3:
+      self.timedTaskMenu = Menu(parent=self.timedTaskList)
+    else:
+      self.timedTaskMenu = QMenu(parent=self.timedTaskList)
     self.addTask = QAction('添加任务',self.timedTaskList)
     self.timedTaskMenu.addAction(self.addTask)
     self.removeTask = QAction('删除任务',self.timedTaskList)
@@ -382,70 +383,78 @@ class gui(QWidget,Ui_Form):
       self.removeTask.setDisabled(True)
     if self.timedTaskList.rowCount()<=0:
       self.removeAllTask.setDisabled(True)
-    self.addTask.triggered.connect(lambda: self.timedTaskManagement(1))
-    self.removeTask.triggered.connect(lambda: self.timedTaskManagement(2,row))
-    # self.refreshTask.triggered.connect(lambda: self.reloadTask())
-    self.removeAllTask.triggered.connect(lambda: self.timedTaskManagement(3))
+    self.addTask.triggered.connect(lambda: self.addTimedTask())
+    self.removeTask.triggered.connect(lambda: self.removeTimedTask(row))
+    self.refreshTask.triggered.connect(lambda: self.reloadTimedTask(4))
+    self.removeAllTask.triggered.connect(lambda: self.removeAllTimedTask())
     self.timedTaskMenu.popup(QCursor.pos())
 
-  def timedTaskManagement(self,type:int,row=-1):
-    '''定时任务管理'''
-    if type==1:
-      self.timedTaskList.insertRow(0)
-    elif type==2 and row!=-1:
-      reply = QMessageBox.warning(
+  def addTimedTask(self):
+    '''新增定时任务'''
+    self.timedTaskList.insertRow(0)
+    typeBox=QComboBox()
+    typeBox.addItems(["指定时刻","指定时间间隔"])
+    self.timedTaskList.setCellWidget(0, 0, typeBox)
+  
+  def removeTimedTask(self,row=-1):
+    '''删除定时任务'''
+    if row<0:
+      return False
+    reply = QMessageBox.warning(
+    self,
+    'Dylan',
+    f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
+    QMessageBox.Yes | QMessageBox.No,
+    QMessageBox.No
+    )
+    if reply == QMessageBox.Yes:
+      self.timedTaskList.removeRow(row)
+  
+  def removeAllTimedTask(self):
+    '''清空定时任务'''
+    reply = QMessageBox.warning(
       self,
       'Dylan',
-      f"确定要删除第{row+1}行吗？\n第{row+1}行将会永远失去！（真的很久！）",
+      "确定要清空定时任务吗？\n他们将会永远失去！（真的很久！）",
       QMessageBox.Yes | QMessageBox.No,
       QMessageBox.No
       )
-      if reply == QMessageBox.Yes:
-        self.timedTaskList.removeRow(row)
-    elif type==3:
-      reply = QMessageBox.warning(
-        self,
-        'Dylan',
-        "确定要清空定时任务吗？\n他们将会永远失去！（真的很久！）",
-        QMessageBox.Yes | QMessageBox.No,
-        QMessageBox.No
-        )
-      if reply == QMessageBox.Yes:
-        for i in range(self.timedTaskList.rowCount()):
-          self.timedTaskList.removeRow(0)
-    elif type==4:
+    if reply == QMessageBox.Yes:
       for i in range(self.timedTaskList.rowCount()):
         self.timedTaskList.removeRow(0)
+
+  def reloadTimedTask(self):
+    '''刷新定时任务'''
+    for i in range(self.timedTaskList.rowCount()):
+      self.timedTaskList.removeRow(0)
+    self.loadTimedTask()
 
   def loadTimedTask(self):
     '''加载定时任务'''
     for i in datas:
-      if i=="timedTaskList":
-        for task in datas["timedTaskList"]:
+      if i=="taskList":
+        for task in datas["taskList"]:
           try:
             self.timedTaskList.insertRow(0)
-            self.timedTaskList.setItem(0,0,QTableWidgetItem(task["name"]))
-            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["cron"]))
+            typeBox=QComboBox()
+            typeBox.addItems(["指定时刻","指定时间间隔"])
+            typeBox.setCurrentIndex(task["type"])
+            self.timedTaskList.setCellWidget(0, 0, typeBox)
+            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["value"]))
             self.timedTaskList.setItem(0,2,QTableWidgetItem(task["remark"]))
             self.timedTaskList.setItem(0,3,QTableWidgetItem(task["command"]))
           except:
             pass
   
-  def checkTasks(self):
-    taskNameList=[]
-    for singleRow in range(self.timedTaskList.rowCount()):
-      name=self.timedTaskList.item(singleRow,0).text()
-      if name in taskNameList:
-        self.timedTaskList.item(singleRow,0).setBackground(QColor(255,0,0,40))
-      else:
-        self.timedTaskList.item(singleRow,0).setBackground((QColor(0,0,0,0)))
-        taskNameList.append(name)
-    
+      
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
     item = self.regularlist.indexAt(pos)
     row=item.row()
-    self.regularMenu = QMenu(self.regularlist)
+    if self.themeId==3:
+      self.regularMenu = Menu(parent=self.regularlist)
+    else:
+      self.regularMenu = QMenu(parent=self.regularlist)
     self.addRegular = QAction('添加记录',self.regularlist)
     self.regularMenu.addAction(self.addRegular)
     self.removeRegular = QAction('删除记录',self.regularlist)
@@ -484,8 +493,11 @@ class gui(QWidget,Ui_Form):
         self.regularlist.removeRow(row)
 
   def checkRegular(self):
+    '''检查正则表达式语法'''
     for singleRow in range(self.regularlist.rowCount()):
       try:
+        if self.regularlist.item(singleRow,1)==None:
+          continue
         re.findall(self.regularlist.item(singleRow,1).text(),"test")
         self.regularlist.item(singleRow,1).setBackground((QColor(0,0,0,0)))
       except:
@@ -493,6 +505,8 @@ class gui(QWidget,Ui_Form):
 
   def addSingelRegular(self,type=str):
     '''读取时添加正则记录'''
+    if regularList.get(type)==None:
+      return False
     if type=="disabled":
       typeIndex=0
     elif type=="private_admin":
@@ -505,20 +519,18 @@ class gui(QWidget,Ui_Form):
       typeIndex=4
     elif type=="console":
       typeIndex=5
-    for i in datas:
-      if i=="regular":
-        for a in datas["regular"][type]:
-          try:
-            self.regularlist.insertRow(0)
-            captureArea=QComboBox()
-            captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
-            captureArea.setCurrentIndex(typeIndex)
-            self.regularlist.setCellWidget(0, 0, captureArea)
-            self.regularlist.setItem(0,1,QTableWidgetItem(a["regular"]))
-            self.regularlist.setItem(0,2,QTableWidgetItem(a["remark"]))
-            self.regularlist.setItem(0,3,QTableWidgetItem(a["command"]))
-          except:
-            pass
+    for singleRegular in regularList[type]:
+      try:
+        self.regularlist.insertRow(0)
+        captureArea=QComboBox()
+        captureArea.addItems(["禁用","私聊（管理）","私聊（所有）","群聊（管理）","群聊（所有）","控制台"])
+        captureArea.setCurrentIndex(typeIndex)
+        self.regularlist.setCellWidget(0, 0, captureArea)
+        self.regularlist.setItem(0,1,QTableWidgetItem(singleRegular["regular"]))
+        self.regularlist.setItem(0,2,QTableWidgetItem(singleRegular["remark"]))
+        self.regularlist.setItem(0,3,QTableWidgetItem(singleRegular["command"]))
+      except:
+        pass
 
   def loadRegular(self):
     '''加载正则记录'''
@@ -594,6 +606,7 @@ class gui(QWidget,Ui_Form):
 
   def setThemes(self,themeId):
     '''设置主题'''
+    self.themeId=themeId
     if themeId==0:
       self.setting_scrollArea.setStyleSheet(
         "#setting_scrollAreaWidgetContents{\nbackground:rgb(255,255,255);}")
@@ -618,14 +631,19 @@ class gui(QWidget,Ui_Form):
       dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(100,100,100))
       dark_palette.setColor(QPalette.ButtonText, QColor(255,255,255))
       dark_palette.setColor(QPalette.BrightText, QColor(255,0,0))
+      dark_palette.setColor(QPalette.Shadow, QColor(0,0,0,0))
       dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
       dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
       dark_palette.setColor(QPalette.HighlightedText, QColor(0,0,0))
+      dark_palette.setColor(QPalette.Disabled,QPalette.ButtonText, QColor(100,100,100))
+      dark_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(100,100,100))
+      dark_palette.setColor(QPalette.Disabled,QPalette.ToolTipText, QColor(100,100,100))
+      dark_palette.setColor(QPalette.Disabled,QPalette.ToolTipBase, QColor(100,100,100))
+      dark_palette.setColor(QPalette.Disabled,QPalette.WindowText, QColor(100,100,100))
       qApp.setPalette(dark_palette)
       qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
       self.setHtml("fusion_dark")
     elif themeId==3:
-      # qApp.setStyle("Fusion")
       self.pluginList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
       self.regularlist.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
       self.timedTaskList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -636,11 +654,52 @@ class gui(QWidget,Ui_Form):
       self.setStyleSheet(
         "background-color: transparent;")
       self.tabWidget.setStyleSheet(
-        "QButton{background-color:#f00}QWidget{background:transparent} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
+        "QMenu{background:#fff}QPushButton{border:1px soild #f0f} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setAttribute(Qt.WA_TranslucentBackground)
-      self.bgColor = QColor(255,255,255,0.9) 
-      hWnd = HWND(int(self.winId()))
-      cdll.LoadLibrary('./attachment/aeroDll.Dll').setBlur(hWnd)
+      self.setAttribute(Qt.WA_NoSystemBackground)
+      self.windowEffect = WindowEffect()
+      self.setWindowFlags(Qt.FramelessWindowHint)
+      self.setAttribute(Qt.WA_NoSystemBackground)
+      self.windowEffect.setAcrylicEffect(int(self.winId()))
+    elif themeId==4:
+      qApp.setStyle("Fusion")
+      areo_palette = QPalette()
+      areo_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+      areo_palette.setColor(QPalette.WindowText, QColor(255,255,255))
+      areo_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+      areo_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+      areo_palette.setColor(QPalette.ToolTipBase, QColor(255,255,255))
+      areo_palette.setColor(QPalette.ToolTipText, QColor(255,255,255))
+      areo_palette.setColor(QPalette.Text, QColor(255,255,255))
+      areo_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+      areo_palette.setColor(QPalette.Disabled,QPalette.Button, QColor(30,30,30))
+      areo_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(100,100,100))
+      areo_palette.setColor(QPalette.ButtonText, QColor(255,255,255))
+      areo_palette.setColor(QPalette.BrightText, QColor(255,0,0))
+      areo_palette.setColor(QPalette.Shadow, QColor(0,0,0,0))
+      areo_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+      areo_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+      areo_palette.setColor(QPalette.HighlightedText, QColor(0,0,0))
+      areo_palette.setColor(QPalette.Disabled,QPalette.ButtonText, QColor(100,100,100))
+      areo_palette.setColor(QPalette.Disabled,QPalette.Text, QColor(100,100,100))
+      areo_palette.setColor(QPalette.Disabled,QPalette.ToolTipText, QColor(100,100,100))
+      areo_palette.setColor(QPalette.Disabled,QPalette.ToolTipBase, QColor(100,100,100))
+      areo_palette.setColor(QPalette.Disabled,QPalette.WindowText, QColor(100,100,100))
+      qApp.setPalette(areo_palette)
+      qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+      self.setHtml("fusion_dark")
+      self.tabWidget.setStyleSheet(
+        "QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
+      self.setting_scrollArea.setStyleSheet(
+        "scrollAreaWidgetContents{\nbackground:background:rgba(0,0,0,0);}")
+      self.setAttribute(Qt.WA_TranslucentBackground)
+      # self.setAttribute(Qt.WA_NoSystemBackground)
+      cdll.LoadLibrary('./attachment/aeroDll.dll').setBlur(HWND(int(self.winId())))
+
+  def mousePressEvent(self, QMouseEvent):
+    """ 移动窗口 """
+    if self.themeId ==3:
+      self.windowEffect.moveWindow(self.winId())
 
   def transferCommand(self):
     '''转发输入命令'''
@@ -833,7 +892,7 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished,tasks
+  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished,taskList,regularList
   UiFinished=False
   while True:
     time.sleep(1)
@@ -845,17 +904,16 @@ def componentInformation():
       except:
         sys.exit()
       datas={
-        "type":"datas",
-        "_notice":"请不要在此修改任何内容！！！",
-        "regular":{
-          "disabled":[],
-          "private":[],
-          "private_admin":[],
-          "group":[],
-          "group_admin":[],
-          "console":[]
+        "regular": {
+          "console": [],
+          "disabled": [],
+          "group": [],
+          "group_admin": [],
+          "private": [],
+          "private_admin": []
         },
-        "timedTaskList":[]
+        "taskList": [],
+        "type":"datas"
       }
       rows=forms["regularlist"].rowCount()
       if rows>0:
@@ -893,14 +951,11 @@ def componentInformation():
       rows=forms["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
-          if forms["timedTaskList"].item(singleRow,0):
-            name=forms["timedTaskList"].item(singleRow,0).text()
-          else:
-            name=""
+          type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
           if forms["timedTaskList"].item(singleRow,1):
-            cron=forms["timedTaskList"].item(singleRow,1).text()
+            value=forms["timedTaskList"].item(singleRow,1).text()
           else:
-            cron=""
+            value=""
           if forms["timedTaskList"].item(singleRow,2):
             remark=forms["timedTaskList"].item(singleRow,2).text()
           else:
@@ -909,11 +964,11 @@ def componentInformation():
             command=forms["timedTaskList"].item(singleRow,3).text()
           else:
             command=""
-          datas["timedTaskList"].append({
-              "name":name,
+          datas["taskList"].append({
+              "value":value,
               "command":command,
               "remark":remark,
-              "cron":cron
+              "type":type
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
@@ -959,7 +1014,6 @@ def componentInformation():
         jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
       regQueue.put(settings)
       regQueue.put(datas)
-      tasks.stop()
     try:
       if MainWindow.isVisible():
         UiFinished=True
@@ -1216,7 +1270,7 @@ def runTasks():
       tasks.add_task(
           name,
           task["cron"],
-          lambda:cmdProcess(commandQueue,settings,datas["timedTaskList"][i]["command"])
+          lambda:cmdProcess(commandQueue,settings,eval(datas["timedTaskList"][i]["command"]))
         )
     i+=1
     if taskName!=[]:
@@ -1312,7 +1366,7 @@ if __name__=="__main__":
   app.processEvents()
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 1.9.20220316"
+  VERSION="Alpha 1.9.20210316"
   serverProcess=-1
   restart=False
   newVersion=None
@@ -1336,6 +1390,14 @@ if __name__=="__main__":
     with open(os.path.join(selfPath,"datas.json"), 'r',encoding='utf-8') as jsonFile:
       try:
         datas=json.load(jsonFile)
+        try:
+          taskList=datas["timedTaskList"]
+        except:
+          taskList=[]
+        try:
+          regularList=datas["regular"]
+        except:
+          regularList={}
       except:
         datas={}
   if not os.path.exists(os.path.join(selfPath,"setting.json")):
@@ -1366,5 +1428,5 @@ if __name__=="__main__":
   cmdThread=threading.Thread(target=inputCommand,daemon=True)
   cmdThread.start()
   cronThread=threading.Thread(target=runTasks,daemon=True)
-  cronThread.start()
+  # cronThread.start()
   mainGui()
