@@ -11,7 +11,7 @@ import time
 from ctypes import cdll
 from ctypes.wintypes import DWORD, HWND
 from windowEffect import WindowEffect
-from acrylicGui import Menu
+from acrylicGui import Menu,MessageBox
 import psutil
 import PyQt5
 import requests
@@ -38,7 +38,7 @@ class gui(QWidget,Ui_Form):
     '''主窗口设置'''
     super(gui, self).__init__(parent)
     self.setupUi(self)
-    	
+      
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan "+VERSION)
@@ -650,17 +650,46 @@ class gui(QWidget,Ui_Form):
       self.setting_scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
       self.setHtml("fusion")
       self.setting_scrollArea.setStyleSheet(
-        "#setting_scrollAreaWidgetContents{background:rgba(255,255,255,0);}")
+        "#setting_scrollAreaWidgetContents{background-color: transparent;}")
       self.setStyleSheet(
-        "background-color: transparent;")
+        """
+        #setting_scrollAreaWidgetContents{background-color: transparent;}
+        QScrollArea{background-color: transparent;}
+        QMessageBox {
+          border:0px solid #00000000;
+          background-color: #F2F2F2;
+        }
+        QMessageBox QLabel#qt_msgbox_label {
+          color: #000;
+        }
+      """)
+      
       self.tabWidget.setStyleSheet(
         "QMenu{background:#fff}QPushButton{border:1px soild #f0f} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setAttribute(Qt.WA_TranslucentBackground)
-      self.setAttribute(Qt.WA_NoSystemBackground)
       self.windowEffect = WindowEffect()
       self.setWindowFlags(Qt.FramelessWindowHint)
       self.setAttribute(Qt.WA_NoSystemBackground)
       self.windowEffect.setAcrylicEffect(int(self.winId()))
+      for child in self.findChildren(QPushButton):
+        child.setStyleSheet("""QPushButton{
+          padding:5px;
+          min-height:13px;
+          background-color: #40aaaaaa;
+        }
+        QPushButton:hover{
+          border:1px solid #aaa;
+        }
+        QPushButton:pressed{
+          border:1px solid #999;
+        }
+        QPushButton:disabled
+        {
+          border:0px solid #00000000;
+        }""")
+      for child in self.findChildren(QMessageBox):
+        child.setStyleSheet("""{background:#f00}""")
+
     elif themeId==4:
       qApp.setStyle("Fusion")
       areo_palette = QPalette()
@@ -711,10 +740,10 @@ class gui(QWidget,Ui_Form):
       for child in self.findChildren((QTableWidget,QComboBox)):
         child.setStyleSheet('''
         QComboBox{
-	        border-radius:3px;
+          border-radius:3px;
           color:rgb(255,255,255);
           border:1px solid #EEE;
-	        padding: 2px;
+          padding: 2px;
         }
         QComboBox:disabled
         {
@@ -731,7 +760,7 @@ class gui(QWidget,Ui_Form):
         }
         QComboBox QAbstractItemView 
         {
-	        border-radius:3px;
+          border-radius:3px;
           outline: 0px solid gray;
           border:1px solid #EEE;
           color: rgb(255,255,255);

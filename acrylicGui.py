@@ -46,4 +46,3 @@ QMenu::item:selected {
     border-color: rgb(212, 212, 212);
     background: rgb(218, 218, 218);
 }''')
-
