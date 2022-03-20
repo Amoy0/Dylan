@@ -11,7 +11,7 @@ import time
 from ctypes import cdll
 from ctypes.wintypes import DWORD, HWND
 from windowEffect import WindowEffect
-from acrylicGui import Menu,MessageBox
+from acrylicGui import Menu
 import psutil
 import PyQt5
 import requests
