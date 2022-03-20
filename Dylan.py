@@ -26,8 +26,6 @@ from betterLog import *
 from command import *
 from gui import Ui_Form
 from reg import *
-from windowEffect import WindowEffect
-
 
 class splash(QSplashScreen):
   def mousePressEvent(self, event):
@@ -665,28 +663,12 @@ class gui(QWidget,Ui_Form):
         }
       """)
       self.tabWidget.setStyleSheet(
-        "QMenu{background:#fff}QPushButton{border:1px soild #f0f} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
+        "QMenu{background:#fff} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setAttribute(Qt.WA_TranslucentBackground)
-      self.windowEffect = WindowEffect()
-      self.setWindowFlags(Qt.FramelessWindowHint)
       self.setAttribute(Qt.WA_NoSystemBackground)
-      self.windowEffect.setAcrylicEffect(int(self.winId()))
-      for child in self.findChildren(QPushButton):
-        child.setStyleSheet("""QPushButton{
-          padding:5px;
-          min-height:13px;
-          background-color: #40aaaaaa;
-        }
-        QPushButton:hover{
-          border:1px solid #aaa;
-        }
-        QPushButton:pressed{
-          border:1px solid #999;
-        }
-        QPushButton:disabled
-        {
-          border:0px solid #00000000;
-        }""")
+      hWnd = HWND(int(self.winId()))     
+      gradientColor = DWORD(0xC0F2F2F2)  
+      cdll.LoadLibrary('attachment/acrylic.dll').setBlur(hWnd, gradientColor)
     elif themeId==4:
       qApp.setStyle("Fusion")
       areo_palette = QPalette()
@@ -822,11 +804,6 @@ class gui(QWidget,Ui_Form):
       self.setAttribute(Qt.WA_TranslucentBackground)
       cdll.LoadLibrary('./attachment/aeroDll.dll').setBlur(HWND(int(self.winId())))
 
-  def mousePressEvent(self, QMouseEvent):
-    """ 移动窗口 """
-    if self.themeId ==3:
-      self.windowEffect.moveWindow(self.winId())
-
   def transferCommand(self):
     '''转发输入命令'''
     text=self.Panel_input.text()
@@ -887,7 +864,6 @@ class gui(QWidget,Ui_Form):
             f"强制结束进程失败\n{e}",
             QMessageBox.Yes
           )
-        
 
   def botControl(self,type):
     '''bot控制'''
@@ -1023,7 +999,7 @@ def componentInformation():
   while True:
     time.sleep(1)
     while UiFinished:
-      time.sleep(1)
+      time.sleep(0.5)
       try:
         if not MainWindow.isVisible():
           sys.exit()
@@ -1079,7 +1055,8 @@ def componentInformation():
         for singleRow in range(rows):
           if forms["timedTaskList"].cellWidget(singleRow,0):
             type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
-            continue
+          else:
+            continue  
           if forms["timedTaskList"].item(singleRow,1):
             value=forms["timedTaskList"].item(singleRow,1).text()
           else:
@@ -1385,6 +1362,44 @@ def runTasks():
   while True:
     time.sleep(0.1)
 
+def saveTask():
+  global forms,taskList
+  while True:
+    time.sleep(0.1)
+    try:
+      if not MainWindow.isVisible():
+        pass
+    except:
+      continue
+    rows=forms["timedTaskList"].rowCount()
+    if rows>0:
+      taskList=[]
+      for singleRow in range(rows):
+        if forms["timedTaskList"].cellWidget(singleRow,0):
+          type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
+        else:
+          continue  
+        if forms["timedTaskList"].item(singleRow,1):
+          value=forms["timedTaskList"].item(singleRow,1).text()
+        else:
+          value=""
+        if forms["timedTaskList"].item(singleRow,2):
+          remark=forms["timedTaskList"].item(singleRow,2).text()
+        else:
+          remark=""
+        if forms["timedTaskList"].item(singleRow,3):
+          command=forms["timedTaskList"].item(singleRow,3).text()
+        else:
+          command=""
+        if type==0 and re.search("^\d+?$",value)!=None:
+          pass
+        taskList.append({
+            "value":value,
+            "command":command,
+            "remark":remark,
+            "type":type
+          })
+
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
   global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
@@ -1539,6 +1554,6 @@ if __name__=="__main__":
   msgThread.start()
   cmdThread=threading.Thread(target=inputCommand,daemon=True)
   cmdThread.start()
-  cronThread=threading.Thread(target=runTasks,daemon=True)
-  # cronThread.start()
+  taskThread=threading.Thread(target=runTasks,daemon=True)
+  taskThread.start()
   mainGui()
