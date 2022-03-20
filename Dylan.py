@@ -10,8 +10,7 @@ import threading
 import time
 from ctypes import cdll
 from ctypes.wintypes import DWORD, HWND
-from windowEffect import WindowEffect
-from acrylicGui import Menu
+
 import psutil
 import PyQt5
 import requests
@@ -22,10 +21,12 @@ from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QPalette, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import *
 
+from acrylicGui import Menu
 from betterLog import *
 from command import *
 from gui import Ui_Form
 from reg import *
+from windowEffect import WindowEffect
 
 
 class splash(QSplashScreen):
@@ -663,7 +664,6 @@ class gui(QWidget,Ui_Form):
           color: #000;
         }
       """)
-      
       self.tabWidget.setStyleSheet(
         "QMenu{background:#fff}QPushButton{border:1px soild #f0f} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setAttribute(Qt.WA_TranslucentBackground)
@@ -687,9 +687,6 @@ class gui(QWidget,Ui_Form):
         {
           border:0px solid #00000000;
         }""")
-      for child in self.findChildren(QMessageBox):
-        child.setStyleSheet("""{background:#f00}""")
-
     elif themeId==4:
       qApp.setStyle("Fusion")
       areo_palette = QPalette()
