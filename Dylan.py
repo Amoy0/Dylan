@@ -688,12 +688,112 @@ class gui(QWidget,Ui_Form):
       qApp.setPalette(areo_palette)
       qApp.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
       self.setHtml("fusion_dark")
+      self.setStyleSheet(
+        "background-color: transparent;")
       self.tabWidget.setStyleSheet(
         "QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setting_scrollArea.setStyleSheet(
         "scrollAreaWidgetContents{\nbackground:background:rgba(0,0,0,0);}")
+      for child in self.findChildren(QPushButton):
+        child.setStyleSheet("""QPushButton{
+          border:1px solid #EEE;
+          padding:5px;
+          min-height:13px;
+          border-radius:3px;
+        }
+        QPushButton:hover{
+          border:1px solid #aaa;
+        }
+        QPushButton:disabled
+        {
+          border:1px solid #646464;
+        }""")
+      for child in self.findChildren((QTableWidget,QComboBox)):
+        child.setStyleSheet('''
+        QComboBox{
+	        border-radius:3px;
+          color:rgb(255,255,255);
+          border:1px solid #EEE;
+	        padding: 2px;
+        }
+        QComboBox:disabled
+        {
+          border:1px solid #646464;
+        }
+        QComboBox:hover
+        {
+          border:1px solid #aaa;
+        }
+        QComboBox:on
+        {
+          border-radius:3px;
+          background-color:#222;
+        }
+        QComboBox QAbstractItemView 
+        {
+	        border-radius:3px;
+          outline: 0px solid gray;
+          border:1px solid #EEE;
+          color: rgb(255,255,255);
+          background-color: rgb(45,45,45);   
+          selection-background-color: rgb(90,90,90);   
+        }
+        QComboBox QAbstractItemView::item
+        { 
+          height: 25px;  
+        }''')
+      for child in self.findChildren(QCheckBox):
+        child.setStyleSheet("""
+        QCheckBox::indicator:unchecked
+        {
+          border:1px solid #EEE;
+        }
+        QCheckBox::indicator:unchecked:hover
+        {
+          border:1px solid #aaa;
+        }
+        QCheckBox::indicator:unchecked:pressed
+        {
+          border:1px solid #777;
+        }
+        QCheckBox::indicator:checked
+        {
+          border:1px solid #EEE;
+          background-image:url(./attachment/check.png)
+        }
+        QCheckBox::indicator:checked:hover {
+          border:1px solid #aaa;
+        }
+        QCheckBox::indicator:checked:pressed {
+          border:1px solid #777;
+        }
+        """)
+      for child in self.findChildren((QLineEdit,QTextEdit,QPlainTextEdit,QSpinBox)):
+        child.setStyleSheet("""
+        *{
+          border:1px solid #EEE;
+          border-radius:3px;
+        }
+        *:hover{
+          border:1px solid #aaa;
+        }
+        *:disabled{
+          border:1px solid #646464;
+        }  """)
+      for child in self.findChildren((QTableView,QTableWidget,QHeaderView)):
+        child.setStyleSheet('''
+        QTableView{
+          border: 1px solid #eee;       
+          gridline-color:#aaa;            
+          selection-background-color: #ffffff10; 
+        }
+        
+        QHeaderView::section{
+          background: transparent;
+        }''')
+      for child in self.findChildren((QListView,QListWidget)):
+        child.setStyleSheet('''border: 1px solid #eee;''')
       self.setAttribute(Qt.WA_TranslucentBackground)
-      # self.setAttribute(Qt.WA_NoSystemBackground)
       cdll.LoadLibrary('./attachment/aeroDll.dll').setBlur(HWND(int(self.winId())))
 
   def mousePressEvent(self, QMouseEvent):
