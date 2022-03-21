@@ -383,7 +383,7 @@ class gui(QWidget,Ui_Form):
       self.removeAllTask.setDisabled(True)
     self.addTask.triggered.connect(lambda: self.addTimedTask())
     self.removeTask.triggered.connect(lambda: self.removeTimedTask(row))
-    self.refreshTask.triggered.connect(lambda: self.reloadTimedTask(4))
+    self.refreshTask.triggered.connect(lambda: self.reloadTimedTask())
     self.removeAllTask.triggered.connect(lambda: self.removeAllTimedTask())
     self.timedTaskMenu.popup(QCursor.pos())
 
@@ -391,8 +391,8 @@ class gui(QWidget,Ui_Form):
     '''新增定时任务'''
     self.timedTaskList.insertRow(0)
     typeBox=QComboBox()
-    typeBox.addItems(["指定时刻","指定时间间隔"])
-    self.timedTaskList.setCellWidget(0, 0, typeBox)
+    typeBox.addItems(["禁用","时刻","时间间隔","Cron"])
+    self.timedTaskList.setCellWidget(0, 1, typeBox)
   
   def removeTimedTask(self,row=-1):
     '''删除定时任务'''
@@ -435,11 +435,11 @@ class gui(QWidget,Ui_Form):
           try:
             self.timedTaskList.insertRow(0)
             typeBox=QComboBox()
-            typeBox.addItems(["指定时刻","指定时间间隔"])
+            typeBox.addItems(["禁用","时刻","时间间隔","Cron"])
             typeBox.setCurrentIndex(task["type"])
-            self.timedTaskList.setCellWidget(0, 0, typeBox)
-            self.timedTaskList.setItem(0,1,QTableWidgetItem(task["value"]))
-            self.timedTaskList.setItem(0,2,QTableWidgetItem(task["remark"]))
+            self.timedTaskList.setItem(0,0,QTableWidgetItem(task["name"]))
+            self.timedTaskList.setCellWidget(0, 1, typeBox)
+            self.timedTaskList.setItem(0,2,QTableWidgetItem(task["value"]))
             self.timedTaskList.setItem(0,3,QTableWidgetItem(task["command"]))
           except:
             pass
@@ -1053,18 +1053,18 @@ def componentInformation():
       rows=forms["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
-          if forms["timedTaskList"].cellWidget(singleRow,0):
-            type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
+          if forms["timedTaskList"].cellWidget(singleRow,1):
+            type=forms["timedTaskList"].cellWidget(singleRow,1).currentIndex()
           else:
             continue  
-          if forms["timedTaskList"].item(singleRow,1):
-            value=forms["timedTaskList"].item(singleRow,1).text()
+          if forms["timedTaskList"].item(singleRow,2):
+            value=forms["timedTaskList"].item(singleRow,2).text()
           else:
             value=""
           if forms["timedTaskList"].item(singleRow,2):
-            remark=forms["timedTaskList"].item(singleRow,2).text()
+            name=forms["timedTaskList"].item(singleRow,0).text()
           else:
-            remark=""
+            name=""
           if forms["timedTaskList"].item(singleRow,3):
             command=forms["timedTaskList"].item(singleRow,3).text()
           else:
@@ -1072,7 +1072,7 @@ def componentInformation():
           datas["taskList"].append({
               "value":value,
               "command":command,
-              "remark":remark,
+              "name":name,
               "type":type
             })
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
