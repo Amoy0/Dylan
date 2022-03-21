@@ -42,6 +42,7 @@ def cmdProcess(commandQueue,settings,command,type=None,record=None,content=None,
     execute(commandQueue,settings,"server-cmd",executionContent)
   elif detailCommand=="CMD":
     execute(commandQueue,settings,"system-cmd",executionContent)
+  return True
 
 def textProcessing(text,record,content):
   '''文本匹配处理'''

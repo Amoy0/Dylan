@@ -14,6 +14,10 @@ from ctypes.wintypes import DWORD, HWND
 import psutil
 import PyQt5
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from flask import Flask, request
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, Qt, QUrl, pyqtSlot
@@ -26,6 +30,7 @@ from betterLog import *
 from command import *
 from gui import Ui_Form
 from reg import *
+
 
 class splash(QSplashScreen):
   def mousePressEvent(self, event):
@@ -1357,13 +1362,12 @@ def startServer():
       server()
   sys.exit()
 
-def runTasks():
-  global datas,settings,commandQueue,tasks
-  while True:
-    time.sleep(0.1)
-
-def saveTask():
-  global forms,taskList
+def runTask():
+  scheduler = BackgroundScheduler()
+  scheduler.start()
+  oldTaskList=[]
+  taskNames=[]
+  global forms,datas,commandQueue,settings
   while True:
     time.sleep(0.1)
     try:
@@ -1371,34 +1375,96 @@ def saveTask():
         pass
     except:
       continue
-    rows=forms["timedTaskList"].rowCount()
-    if rows>0:
-      taskList=[]
-      for singleRow in range(rows):
-        if forms["timedTaskList"].cellWidget(singleRow,0):
-          type=forms["timedTaskList"].cellWidget(singleRow,0).currentIndex()
+    taskNames=[]
+    taskList=datas["taskList"]
+    for task in taskList:
+      if task["name"] in taskNames or task["type"]==0:
+        continue
+      if task["command"]!="" and task["name"]!="" and task["value"]!="":
+        if task in oldTaskList:
+          taskList.remove(task)
+          for oldTask in oldTaskList:
+            if oldTask==task:
+              oldTaskList.remove(oldTask)
+          continue
         else:
-          continue  
-        if forms["timedTaskList"].item(singleRow,1):
-          value=forms["timedTaskList"].item(singleRow,1).text()
-        else:
-          value=""
-        if forms["timedTaskList"].item(singleRow,2):
-          remark=forms["timedTaskList"].item(singleRow,2).text()
-        else:
-          remark=""
-        if forms["timedTaskList"].item(singleRow,3):
-          command=forms["timedTaskList"].item(singleRow,3).text()
-        else:
-          command=""
-        if type==0 and re.search("^\d+?$",value)!=None:
-          pass
-        taskList.append({
-            "value":value,
-            "command":command,
-            "remark":remark,
-            "type":type
-          })
+          if oldTaskList==[]:
+            if task["type"]==1:
+              continue
+              scheduler.add_job(
+                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                id=task["name"],
+                trigger = DateTrigger(run_date=task["value"])
+              )
+            elif task["type"]==2:
+              scheduler.add_job(
+                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                id=task["name"],
+                trigger = IntervalTrigger(seconds=int(task["value"])),
+                coalesce=True,
+                max_instance=100,
+                misfire_grace_time=1
+              )
+            elif task["type"]==3:
+              continue
+              scheduler.add_job(
+                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                id=task["name"],
+              )
+          for oldTask in oldTaskList:
+            changed=False
+            if oldTask["name"]==task["name"]:
+              # 旧任务存在，更新一下参数即可
+              if oldTask["type"]!=task["type"] or oldTask["value"]!=task["value"]:
+                # 更新类型和值
+                if task["type"]==1:
+                  continue
+                  scheduler.modify_job(
+                    oldTask["name"],
+                    trigger = DateTrigger(run_date=task["value"]),
+                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
+                  )
+                elif task["type"]==2:
+                  scheduler.modify_job(
+                    oldTask["name"],
+                    trigger = IntervalTrigger(seconds=task["value"]),
+                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
+                  )
+                elif task["type"]==3:
+                  continue
+                  scheduler.modify_job(
+                    oldTask["name"],
+                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
+                  )
+                oldTaskList.remove(oldTask)
+                taskList.remove(task)
+            elif scheduler.get_job(task["name"])==None:
+              # 旧任务不存在
+              if task["type"]==1:
+                continue
+                scheduler.add_job(
+                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                  id=task["name"],
+                  trigger = DateTrigger(run_date=task["value"])
+                )
+              elif task["type"]==2:
+                scheduler.add_job(
+                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                  id=task["name"],
+                  trigger = IntervalTrigger(seconds=int(task["value"]))
+                )
+              elif task["type"]==3:
+                continue
+                scheduler.add_job(
+                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
+                  id=task["name"],
+                )
+          for oldTask in oldTaskList:
+            if scheduler.get_job(oldTask["name"])!=None:
+              scheduler.remove_job(oldTask["name"]) 
+      taskNames.append(task["name"])
+    oldTaskList=datas["taskList"]
+    print(scheduler.get_jobs())
 
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
@@ -1554,6 +1620,6 @@ if __name__=="__main__":
   msgThread.start()
   cmdThread=threading.Thread(target=inputCommand,daemon=True)
   cmdThread.start()
-  taskThread=threading.Thread(target=runTasks,daemon=True)
+  taskThread=threading.Thread(target=runTask,daemon=True)
   taskThread.start()
   mainGui()
