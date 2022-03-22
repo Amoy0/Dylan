@@ -767,12 +767,17 @@
          </column>
          <column>
           <property name="text">
-           <string>类型</string>
+           <string>备注</string>
           </property>
          </column>
          <column>
           <property name="text">
            <string>值</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>备注</string>
           </property>
          </column>
          <column>

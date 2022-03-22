@@ -14,10 +14,6 @@ from ctypes.wintypes import DWORD, HWND
 import psutil
 import PyQt5
 import requests
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.triggers.interval import IntervalTrigger
 from flask import Flask, request
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, Qt, QUrl, pyqtSlot
@@ -30,6 +26,7 @@ from betterLog import *
 from command import *
 from gui import Ui_Form
 from reg import *
+from task import *
 
 
 class splash(QSplashScreen):
@@ -436,16 +433,17 @@ class gui(QWidget,Ui_Form):
     '''加载定时任务'''
     for i in datas:
       if i=="taskList":
-        for task in datas["taskList"]:
+        for task in list(datas["taskList"].keys()):
           try:
             self.timedTaskList.insertRow(0)
             typeBox=QComboBox()
             typeBox.addItems(["禁用","时刻","时间间隔","Cron"])
-            typeBox.setCurrentIndex(task["type"])
-            self.timedTaskList.setItem(0,0,QTableWidgetItem(task["name"]))
+            typeBox.setCurrentIndex(datas["taskList"][task]["type"])
+            self.timedTaskList.setItem(0,0,QTableWidgetItem(datas["taskList"][task]["name"]))
             self.timedTaskList.setCellWidget(0, 1, typeBox)
-            self.timedTaskList.setItem(0,2,QTableWidgetItem(task["value"]))
-            self.timedTaskList.setItem(0,3,QTableWidgetItem(task["command"]))
+            self.timedTaskList.setItem(0,2,QTableWidgetItem(datas["taskList"][task]["value"]))
+            self.timedTaskList.setItem(0,3,QTableWidgetItem(datas["taskList"][task]["remark"]))
+            self.timedTaskList.setItem(0,4,QTableWidgetItem(datas["taskList"][task]["command"]))
           except:
             pass
   
@@ -999,7 +997,8 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished,taskList,regularList
+  task=Task(commandQueue)
+  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished
   UiFinished=False
   while True:
     time.sleep(1)
@@ -1010,17 +1009,12 @@ def componentInformation():
           sys.exit()
       except:
         sys.exit()
-      datas={
-        "regular": {
-          "console": [],
-          "disabled": [],
-          "group": [],
-          "group_admin": [],
-          "private": [],
-          "private_admin": []
-        },
-        "taskList": [],
-        "type":"datas"
+      regularList={
+        "disabled":[],
+        "private_admin":[],
+        "private":[],
+        "group_admin":[],
+        "group":[]
       }
       rows=forms["regularlist"].rowCount()
       if rows>0:
@@ -1050,11 +1044,13 @@ def componentInformation():
             captureArea="group"
           elif captureArea==5:
             captureArea="console"
-          datas["regular"][captureArea].append({
+          regularList[captureArea].append({
               "regular":regular,
               "command":command,
               "remark":remark
             })
+      taskList={}
+      taskNameList=[]  
       rows=forms["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
@@ -1066,20 +1062,34 @@ def componentInformation():
             value=forms["timedTaskList"].item(singleRow,2).text()
           else:
             value=""
-          if forms["timedTaskList"].item(singleRow,2):
+          if forms["timedTaskList"].item(singleRow,0):
             name=forms["timedTaskList"].item(singleRow,0).text()
           else:
             name=""
           if forms["timedTaskList"].item(singleRow,3):
-            command=forms["timedTaskList"].item(singleRow,3).text()
+            remark=forms["timedTaskList"].item(singleRow,3).text()
+          else:
+            remark=""
+          if forms["timedTaskList"].item(singleRow,4):
+            command=forms["timedTaskList"].item(singleRow,4).text()
           else:
             command=""
-          datas["taskList"].append({
+          if name in taskNameList or name=="":
+            continue
+          else:
+            taskNameList.append(name)
+          taskList[name]={
               "value":value,
               "command":command,
               "name":name,
-              "type":type
-            })
+              "type":type,
+              "remark":remark
+            }
+      datas={
+        "regular":regularList,
+        "taskList": taskList,
+        "type":"datas"
+      }
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
       groupList=[]
@@ -1124,6 +1134,8 @@ def componentInformation():
         jsonFile.write(json.dumps(settings,sort_keys=True,ensure_ascii=False,indent=2))
       regQueue.put(settings)
       regQueue.put(datas)
+      task.updateSettings(settings)
+      task.updateTaskList(taskList)
     try:
       if MainWindow.isVisible():
         UiFinished=True
@@ -1362,110 +1374,6 @@ def startServer():
       server()
   sys.exit()
 
-def runTask():
-  scheduler = BackgroundScheduler()
-  scheduler.start()
-  oldTaskList=[]
-  taskNames=[]
-  global forms,datas,commandQueue,settings
-  while True:
-    time.sleep(0.1)
-    try:
-      if not MainWindow.isVisible():
-        pass
-    except:
-      continue
-    taskNames=[]
-    taskList=datas["taskList"]
-    for task in taskList:
-      if task["name"] in taskNames or task["type"]==0:
-        continue
-      if task["command"]!="" and task["name"]!="" and task["value"]!="":
-        if task in oldTaskList:
-          taskList.remove(task)
-          for oldTask in oldTaskList:
-            if oldTask==task:
-              oldTaskList.remove(oldTask)
-          continue
-        else:
-          if oldTaskList==[]:
-            if task["type"]==1:
-              continue
-              scheduler.add_job(
-                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                id=task["name"],
-                trigger = DateTrigger(run_date=task["value"])
-              )
-            elif task["type"]==2:
-              scheduler.add_job(
-                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                id=task["name"],
-                trigger = IntervalTrigger(seconds=int(task["value"])),
-                coalesce=True,
-                max_instance=100,
-                misfire_grace_time=1
-              )
-            elif task["type"]==3:
-              continue
-              scheduler.add_job(
-                func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                id=task["name"],
-              )
-          for oldTask in oldTaskList:
-            changed=False
-            if oldTask["name"]==task["name"]:
-              # 旧任务存在，更新一下参数即可
-              if oldTask["type"]!=task["type"] or oldTask["value"]!=task["value"]:
-                # 更新类型和值
-                if task["type"]==1:
-                  continue
-                  scheduler.modify_job(
-                    oldTask["name"],
-                    trigger = DateTrigger(run_date=task["value"]),
-                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
-                  )
-                elif task["type"]==2:
-                  scheduler.modify_job(
-                    oldTask["name"],
-                    trigger = IntervalTrigger(seconds=task["value"]),
-                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
-                  )
-                elif task["type"]==3:
-                  continue
-                  scheduler.modify_job(
-                    oldTask["name"],
-                    func = lambda:cmdProcess(commandQueue,settings,task["command"])
-                  )
-                oldTaskList.remove(oldTask)
-                taskList.remove(task)
-            elif scheduler.get_job(task["name"])==None:
-              # 旧任务不存在
-              if task["type"]==1:
-                continue
-                scheduler.add_job(
-                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                  id=task["name"],
-                  trigger = DateTrigger(run_date=task["value"])
-                )
-              elif task["type"]==2:
-                scheduler.add_job(
-                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                  id=task["name"],
-                  trigger = IntervalTrigger(seconds=int(task["value"]))
-                )
-              elif task["type"]==3:
-                continue
-                scheduler.add_job(
-                  func = lambda:cmdProcess(commandQueue,settings,task["command"]),
-                  id=task["name"],
-                )
-          for oldTask in oldTaskList:
-            if scheduler.get_job(oldTask["name"])!=None:
-              scheduler.remove_job(oldTask["name"]) 
-      taskNames.append(task["name"])
-    oldTaskList=datas["taskList"]
-    print(scheduler.get_jobs())
-
 def statusMonitoring():
   '''系统CPU占用与内存使用率监控'''
   global serverProcess,forms,MainWindow,qq,MessageReceived,MessageSent
@@ -1600,7 +1508,6 @@ if __name__=="__main__":
   serverState=0
   botState=0
   forms=""
-  
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
     sys.exit()
@@ -1620,6 +1527,4 @@ if __name__=="__main__":
   msgThread.start()
   cmdThread=threading.Thread(target=inputCommand,daemon=True)
   cmdThread.start()
-  taskThread=threading.Thread(target=runTask,daemon=True)
-  taskThread.start()
   mainGui()
