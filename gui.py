@@ -741,7 +741,7 @@ class Ui_Form(object):
         item = self.timedTaskList.horizontalHeaderItem(0)
         item.setText(_translate("Form", "名称"))
         item = self.timedTaskList.horizontalHeaderItem(1)
-        item.setText(_translate("Form", "备注"))
+        item.setText(_translate("Form", "类型"))
         item = self.timedTaskList.horizontalHeaderItem(2)
         item.setText(_translate("Form", "值"))
         item = self.timedTaskList.horizontalHeaderItem(3)
