@@ -37,7 +37,6 @@ def regProcessing(regQueue:Queue,commandQueue:Queue):
           else:
             reply(settings,item,datas["regular"]["private"],commandQueue)
       except Exception as e:
-        print(e)
         pass
     else:
       time.sleep(0.1)

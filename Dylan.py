@@ -108,7 +108,10 @@ class gui(QWidget,Ui_Form):
         }
       },
       "regularlist":self.regularlist,
-      "timedTaskList":self.timedTaskList
+      "timedTask":{
+        "timedTaskList":self.timedTaskList,
+        "timedTask_state":self.timedTask_state
+        }
       }
     self.loadSetting()
     self.loadRegular()
@@ -146,7 +149,6 @@ class gui(QWidget,Ui_Form):
         else:
           break
       except Exception as e:
-        print(e,1)
         pass
       finally:
         failTimes+=1
@@ -234,6 +236,8 @@ class gui(QWidget,Ui_Form):
     '''连接组件与函数'''
     self.regularlist.itemChanged.connect(self.checkRegular)
     self.regularlist.itemClicked.connect(self.checkRegular)
+    self.timedTaskList.itemChanged.connect(self.checkTask)
+    self.timedTaskList.itemClicked.connect(self.checkTask)
     self.timedTaskList.customContextMenuRequested.connect(self.createTimedTaskMenu)
     self.pluginList.customContextMenuRequested.connect(self.createPluginMenu)
     self.regularlist.customContextMenuRequested.connect(self.createRegularMenu)
@@ -393,7 +397,7 @@ class gui(QWidget,Ui_Form):
     '''新增定时任务'''
     self.timedTaskList.insertRow(0)
     typeBox=QComboBox()
-    typeBox.addItems(["禁用","时刻","时间间隔","Cron"])
+    typeBox.addItems(["禁用","时间间隔","Cron表达式"])
     self.timedTaskList.setCellWidget(0, 1, typeBox)
   
   def removeTimedTask(self,row=-1):
@@ -437,7 +441,7 @@ class gui(QWidget,Ui_Form):
           try:
             self.timedTaskList.insertRow(0)
             typeBox=QComboBox()
-            typeBox.addItems(["禁用","时刻","时间间隔","Cron"])
+            typeBox.addItems(["禁用","时间间隔","Cron表达式"])
             typeBox.setCurrentIndex(datas["taskList"][task]["type"])
             self.timedTaskList.setItem(0,0,QTableWidgetItem(datas["taskList"][task]["name"]))
             self.timedTaskList.setCellWidget(0, 1, typeBox)
@@ -447,7 +451,32 @@ class gui(QWidget,Ui_Form):
           except:
             pass
   
-      
+  def checkTask(self):
+    '''检查定时任务语法'''
+    name=[]
+    for singleRow in range(self.timedTaskList.rowCount()):
+      if self.timedTaskList.item(singleRow,0)==None:
+        pass
+      elif self.timedTaskList.item(singleRow,0).text() in name:
+        self.timedTaskList.item(singleRow,0).setBackground(QColor(255,0,0,40))
+      else:
+        name.append(self.timedTaskList.item(singleRow,0).text())
+        self.timedTaskList.item(singleRow,0).setBackground((QColor(0,0,0,0)))
+      if self.timedTaskList.cellWidget(singleRow,1).currentIndex()==2:
+        try:
+          if self.timedTaskList.item(singleRow,2)!=None:
+            if self.timedTaskList.item(singleRow,2).text()=="":
+              continue
+            CronTab(self.timedTaskList.item(singleRow,2).text()).next(default_utc=False)
+          self.timedTaskList.item(singleRow,2).setBackground((QColor(0,0,0,0)))
+        except:
+          self.timedTaskList.item(singleRow,2).setBackground(QColor(255,0,0,40))
+      elif self.timedTaskList.cellWidget(singleRow,1).currentIndex()==1 and self.timedTaskList.item(singleRow,2)!=None:
+        if re.search("^[\d]+\.?[\d]{0,}$",self.timedTaskList.item(singleRow,2).text()):
+          self.timedTaskList.item(singleRow,2).setBackground((QColor(0,0,0,0)))
+        else:
+          self.timedTaskList.item(singleRow,2).setBackground(QColor(255,0,0,40))
+
   def createRegularMenu(self,pos):
     '''创建正则管理页面的右键菜单'''
     item = self.regularlist.indexAt(pos)
@@ -719,7 +748,7 @@ class gui(QWidget,Ui_Form):
         {
           border:1px solid #646464;
         }""")
-      for child in self.findChildren((QTableWidget,QComboBox)):
+      for child in self.findChildren((QTableView,QTableWidget,QComboBox)):
         child.setStyleSheet('''
         QComboBox{
           border-radius:3px;
@@ -1051,27 +1080,27 @@ def componentInformation():
             })
       taskList={}
       taskNameList=[]  
-      rows=forms["timedTaskList"].rowCount()
+      rows=forms["timedTask"]["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
-          if forms["timedTaskList"].cellWidget(singleRow,1):
-            type=forms["timedTaskList"].cellWidget(singleRow,1).currentIndex()
+          if forms["timedTask"]["timedTaskList"].cellWidget(singleRow,1):
+            type=forms["timedTask"]["timedTaskList"].cellWidget(singleRow,1).currentIndex()
           else:
             continue  
-          if forms["timedTaskList"].item(singleRow,2):
-            value=forms["timedTaskList"].item(singleRow,2).text()
+          if forms["timedTask"]["timedTaskList"].item(singleRow,2):
+            value=forms["timedTask"]["timedTaskList"].item(singleRow,2).text()
           else:
             value=""
-          if forms["timedTaskList"].item(singleRow,0):
-            name=forms["timedTaskList"].item(singleRow,0).text()
+          if forms["timedTask"]["timedTaskList"].item(singleRow,0):
+            name=forms["timedTask"]["timedTaskList"].item(singleRow,0).text()
           else:
             name=""
-          if forms["timedTaskList"].item(singleRow,3):
-            remark=forms["timedTaskList"].item(singleRow,3).text()
+          if forms["timedTask"]["timedTaskList"].item(singleRow,3):
+            remark=forms["timedTask"]["timedTaskList"].item(singleRow,3).text()
           else:
             remark=""
-          if forms["timedTaskList"].item(singleRow,4):
-            command=forms["timedTaskList"].item(singleRow,4).text()
+          if forms["timedTask"]["timedTaskList"].item(singleRow,4):
+            command=forms["timedTask"]["timedTaskList"].item(singleRow,4).text()
           else:
             command=""
           if name in taskNameList or name=="":
@@ -1092,6 +1121,7 @@ def componentInformation():
       }
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
+      forms["timedTask"]["timedTask_state"].setText("误差时间："+task.deviation()+"s")
       groupList=[]
       permissionList=[]
       if stopSavingSetting:
@@ -1272,7 +1302,6 @@ def server():
         break
     except:
       serverProcess.stdin.write("stop\n")
-      print("?")
       break
 
 def outputCommand(command:str):

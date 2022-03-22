@@ -4,7 +4,7 @@ import threading
 import time
 import re
 from command import *
-
+from crontab import CronTab
 
 class Task(object):
   def __init__(
@@ -23,6 +23,8 @@ class Task(object):
         continue
       elif self.taskList[task].get("time")==None:
         self.taskList[task]=self.updateTaskTime(self.taskList[task])
+        if self.taskList[task].get("time")==None:
+          continue
       elif self.taskList[task]["time"]<time.time():
         cmdProcess(
           commandQueue=self.commandQueue,
@@ -40,7 +42,7 @@ class Task(object):
     if newTaskList=={}:
       self.taskList.clear()
       return True
-    for newTask in newTaskList :
+    for newTask in newTaskList:
       new=True
       for task in list(self.taskList.keys()):
         if self.taskList[task]["name"]==newTaskList[newTask]["name"]:
@@ -56,17 +58,33 @@ class Task(object):
 
   def updateTaskTime(self,task:dict):
     ''''更新任务时间'''
+    task["value"]=task["value"].rstrip(' ')
     if task.get("type")==None or task.get("value")==None:
       pass
-    elif task["type"]==2:
-      if re.search("^[\d\.]+$",task["value"]):
-        task["time"]=time.time()+float(task["value"])
+    elif task["type"]==1:
+      if re.search("^[\d]+\.?[\d]{0,}$",task["value"]):
+        if float(task["value"])>0.01:
+          task["time"]=time.time()+float(task["value"])
+        else:
+          task["time"]=time.time()+0.01
       else:
         task["time"]=time.time()*2
+    elif task["type"]==2:
+      try:
+        task["time"]=CronTab(task["value"]).next(default_utc=False)+time.time()
+      except Exception as e:
+        # print(e)
+        pass
     return task
 
   def loop(self):
     '''循环'''
     while True:
+      startTime=time.time()
       time.sleep(0.01)
       self.check()
+      self.deviationTime=str(format(time.time()-startTime-0.01,".10f"))
+
+  def deviation(self):
+    '''返回当前的误差时间'''
+    return self.deviationTime
