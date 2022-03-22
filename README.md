@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/ Python-v3.7%2B-blue">
   </a>   
   <a href="#">
-    <img src="https://img.shields.io/badge/ Version-Alpha%201-yellow">
+    <img src="https://img.shields.io/badge/ Version-Alpha%202-yellow">
   </a>
   <a href="#">
     <img src="https://img.shields.io/badge/ State-%E6%9B%B4%E6%96%B0%E4%B8%AD-orange">
