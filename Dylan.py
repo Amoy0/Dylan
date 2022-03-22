@@ -43,7 +43,7 @@ class gui(QWidget,Ui_Form):
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan "+VERSION)
-    self.about_logo.setText("·Dylan Alpha·")
+    self.about_logo.setText(" Dylan Alpha")
     self.tabWidget.setCurrentIndex(0)
     self.Panel_input.setDisabled(True)
     self.Panel_start.setDisabled(False)
@@ -1521,7 +1521,7 @@ if __name__=="__main__":
   app.processEvents()
   channel = QWebChannel()
   Function = Functions()
-  VERSION="Alpha 2.0.20220319"
+  VERSION="Alpha 2.1.20220322"
   serverProcess=-1
   restart=False
   newVersion=None
