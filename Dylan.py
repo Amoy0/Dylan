@@ -39,7 +39,7 @@ class gui(QWidget,Ui_Form):
     '''主窗口设置'''
     super(gui, self).__init__(parent)
     self.setupUi(self)
-      
+
     global consolePath,forms,datas,icoPath
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan "+VERSION)
@@ -399,7 +399,7 @@ class gui(QWidget,Ui_Form):
     typeBox=QComboBox()
     typeBox.addItems(["禁用","时间间隔","Cron表达式"])
     self.timedTaskList.setCellWidget(0, 1, typeBox)
-  
+
   def removeTimedTask(self,row=-1):
     '''删除定时任务'''
     if row<0:
@@ -413,7 +413,7 @@ class gui(QWidget,Ui_Form):
     )
     if reply == QMessageBox.Yes:
       self.timedTaskList.removeRow(row)
-  
+
   def removeAllTimedTask(self):
     '''清空定时任务'''
     reply = QMessageBox.warning(
@@ -450,7 +450,7 @@ class gui(QWidget,Ui_Form):
             self.timedTaskList.setItem(0,4,QTableWidgetItem(datas["taskList"][task]["command"]))
           except:
             pass
-  
+
   def checkTask(self):
     '''检查定时任务语法'''
     name=[]
@@ -472,7 +472,7 @@ class gui(QWidget,Ui_Form):
         except:
           self.timedTaskList.item(singleRow,2).setBackground(QColor(255,0,0,40))
       elif self.timedTaskList.cellWidget(singleRow,1).currentIndex()==1 and self.timedTaskList.item(singleRow,2)!=None:
-        if re.search("^[\d]+\.?[\d]{0,}$",self.timedTaskList.item(singleRow,2).text()):
+        if re.search("^[\d]{0,}\.?[\d]{1,}$",self.timedTaskList.item(singleRow,2).text()):
           self.timedTaskList.item(singleRow,2).setBackground((QColor(0,0,0,0)))
         else:
           self.timedTaskList.item(singleRow,2).setBackground(QColor(255,0,0,40))
@@ -698,8 +698,8 @@ class gui(QWidget,Ui_Form):
         "QMenu{background:#fff} QTabWidget::pane{border: 1px;border-color:red;background-color: transparent;} QTabBar::tab {background-color: transparent;}QTabBar::tab:hover{background-color:#aaaaaa50}QTabBar::tab:selected{background-color: #33333350;}")
       self.setAttribute(Qt.WA_TranslucentBackground)
       self.setAttribute(Qt.WA_NoSystemBackground)
-      hWnd = HWND(int(self.winId()))     
-      gradientColor = DWORD(0xC0F2F2F2)  
+      hWnd = HWND(int(self.winId()))
+      gradientColor = DWORD(0xC0F2F2F2)
       cdll.LoadLibrary('attachment/acrylic.dll').setBlur(hWnd, gradientColor)
     elif themeId==4:
       qApp.setStyle("Fusion")
@@ -769,18 +769,18 @@ class gui(QWidget,Ui_Form):
           border-radius:3px;
           background-color:#222;
         }
-        QComboBox QAbstractItemView 
+        QComboBox QAbstractItemView
         {
           border-radius:3px;
           outline: 0px solid gray;
           border:1px solid #EEE;
           color: rgb(255,255,255);
-          background-color: rgb(45,45,45);   
-          selection-background-color: rgb(90,90,90);   
+          background-color: rgb(45,45,45);
+          selection-background-color: rgb(90,90,90);
         }
         QComboBox QAbstractItemView::item
-        { 
-          height: 25px;  
+        {
+          height: 25px;
         }''')
       for child in self.findChildren(QCheckBox):
         child.setStyleSheet("""
@@ -823,11 +823,11 @@ class gui(QWidget,Ui_Form):
       for child in self.findChildren((QTableView,QTableWidget,QHeaderView)):
         child.setStyleSheet('''
         QTableView{
-          border: 1px solid #eee;       
-          gridline-color:#aaa;            
-          selection-background-color: #ffffff10; 
+          border: 1px solid #eee;
+          gridline-color:#aaa;
+          selection-background-color: #ffffff10;
         }
-        
+
         QHeaderView::section{
           background: transparent;
         }''')
@@ -1079,14 +1079,14 @@ def componentInformation():
               "remark":remark
             })
       taskList={}
-      taskNameList=[]  
+      taskNameList=[]
       rows=forms["timedTask"]["timedTaskList"].rowCount()
       if rows>0:
         for singleRow in range(rows):
           if forms["timedTask"]["timedTaskList"].cellWidget(singleRow,1):
             type=forms["timedTask"]["timedTaskList"].cellWidget(singleRow,1).currentIndex()
           else:
-            continue  
+            continue
           if forms["timedTask"]["timedTaskList"].item(singleRow,2):
             value=forms["timedTask"]["timedTaskList"].item(singleRow,2).text()
           else:
@@ -1516,7 +1516,7 @@ if __name__=="__main__":
   app=QtWidgets.QApplication(sys.argv)
   splashWindow=splash()
   splashWindow.setAttribute(Qt.WA_TranslucentBackground)
-  splashWindow.setPixmap(QPixmap('attachment/ico.png')) 
+  splashWindow.setPixmap(QPixmap('attachment/ico.png'))
   splashWindow.show()
   app.processEvents()
   channel = QWebChannel()

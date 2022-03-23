@@ -32,11 +32,11 @@ class Task(object):
           command=self.taskList[task]["command"]
           )
         self.taskList[task]=self.updateTaskTime(self.taskList[task])
-        
+
   def updateSettings(self,settings:dict):
     '''更新设置'''
     self.settings=settings
-  
+
   def updateTaskList(self,newTaskList:dict):
     '''更新任务列表'''
     if newTaskList=={}:
@@ -62,7 +62,7 @@ class Task(object):
     if task.get("type")==None or task.get("value")==None:
       pass
     elif task["type"]==1:
-      if re.search("^[\d]+\.?[\d]{0,}$",task["value"]):
+      if re.search("^[\d]{0,}\.?[\d]{1,}$",task["value"]):
         if float(task["value"])>0.01:
           task["time"]=time.time()+float(task["value"])
         else:
