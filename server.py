@@ -33,6 +33,7 @@ class Server(object):
       return False
     if not os.path.exists(self.settings["start"]["filepath"]):
       return False
+    self.infomation={}
     self.serverProcess=subprocess.Popen(
     self.settings["start"]["filepath"],
     stdout=subprocess.PIPE,
@@ -51,10 +52,10 @@ class Server(object):
     self.logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
     self.stopFlag=0
     self.started=0
-    if self.stopFlag>0:
-      self.stopFlag-=1
     self.running=True
     while self.running:
+      if self.stopFlag>0:
+        self.stopFlag-=1
       try:
         log=""
         log=self.serverProcess.stdout.readline()
@@ -104,7 +105,6 @@ class Server(object):
             ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
           elif log_.find("IPv6")>0:
             ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
-
         log=escapeLog(log)
         log=colorLog(log,self.settings["console"]["colorfulLogOut"])
         self.logQueue.put(log)
@@ -124,13 +124,15 @@ class Server(object):
             self.logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程被强制结束"))
           else:
             self.logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程疑似异常终止"))
-          self.status=1
           if self.restart:
             self.logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器将在5s后重启 Tip:可按下停止按钮停用重启进程"))
             for i in range(10):
               time.sleep(0.5)
               if not self.restart:
                 self.logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]重启已取消"))
+                break
+            if self.restart:
+              self.start()
           break
  
   def outputCommand(self,command:str):
@@ -138,7 +140,9 @@ class Server(object):
     if self.settings["console"]["outputCommandToConsole"]:
       self.logQueue.put(">"+command)
     if self.settings["console"]["enableOutputToLog"]:
-      self.logger(f"{str(datetime.datetime.now().time()).split('.')[0]} COMMAND {command}")
+      self.logger(
+        f"{str(datetime.datetime.now().time()).split('.')[0]} COMMAND {command}"
+        )
     if command=="#start":
       self.run()
     elif command=="#refresh":
@@ -151,19 +155,26 @@ class Server(object):
 
   def logger(self,text:str):
     '''控制台消息输出'''
-    with open(os.path.join(self.selfPath,"log",f"console-{datetime.date.today()}.log"),"a",encoding="UTF-8") as logFile:
+    with open(
+      os.path.join(
+        self.selfPath,"log",
+        f"console-{datetime.date.today()}.log"
+      ),
+      "a",
+      encoding="UTF-8"
+      ) as logFile:
       logFile.write(outputRecognition(text)+"\n")
 
   def updateSettings(self,settings:dict):
     '''更新设置'''
     self.settings=settings
-    self.restart=self.settings["start"]["autoRestart"]
 
   def isRunning(self):
     '''返回运行状态'''
     return self.running
 
   def isWaitingRestart(self):
+    '''返回重启状态'''
     return self.restart
 
   def info(self):
@@ -175,6 +186,7 @@ class Server(object):
     self.restart=restart
 
   def inputCommand(self):
+    '''输入命令'''
     while self.isRunning:
       if not self.commandQueue.empty():
         self.outputCommand(self.commandQueue.get())
@@ -193,3 +205,5 @@ class Server(object):
           process=process.children()[0]
         else:
           break
+    self.running=False
+    self.restart=False

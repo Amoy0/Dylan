@@ -41,7 +41,7 @@ class gui(QWidget,Ui_Form):
     super(gui, self).__init__(parent)
     self.setupUi(self)
 
-    global consolePath,forms,datas,icoPath
+    global forms
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan "+VERSION)
     self.about_logo.setText(" Dylan Alpha")
@@ -120,10 +120,10 @@ class gui(QWidget,Ui_Form):
     self.loadTimedTask()
     self.connectFunctions()
     self.checkRegular()
+    self.checkTask()
 
   def showEvent(self, event):
     '''启动时加载更新信息与初始化'''
-    global settings,VERSION
     self.resizeConsole()
     msgbox=QMessageBox(self)
     text=None
@@ -845,7 +845,7 @@ class gui(QWidget,Ui_Form):
   def serverControl(self,type):
     '''服务器控制按钮'''
     global commandQueue,settings
-    if type==1 and not server.isRunning():
+    if type==1 and not server.isRunning() and not server.isWaitingRestart():
       while not commandQueue.empty():
         commandQueue.get()
       if not os.path.exists(self.setting_filepath.text()):
@@ -889,7 +889,7 @@ class gui(QWidget,Ui_Form):
 
   def botControl(self,type):
     '''bot控制'''
-    global botState,botProcess,botQueue,selfPath,settings
+    global botState,botProcess
     if type==1:
       if os.path.exists(settings["bot"]["botFilepath"]):
         botState=1
@@ -1015,8 +1015,7 @@ def closeBot():
 
 def componentInformation():
   '''组件信息处理'''
-  task=Task(commandQueue)
-  global MainWindow,forms,datas,sendPort,listenPort,settings,UiFinished
+  global MainWindow,forms,datas,sendPort,listenPort,settings
   UiFinished=False
   while True:
     time.sleep(1)
@@ -1110,7 +1109,6 @@ def componentInformation():
       }
       with open(os.path.join(selfPath,"datas.json"), 'w',encoding='utf-8')as jsonFile:
         jsonFile.write(json.dumps(datas,sort_keys=True,ensure_ascii=False,indent=2))
-      forms["timedTask"]["timedTask_state"].setText("误差时间："+task.deviation()+"s")
       groupList=[]
       permissionList=[]
       if stopSavingSetting:
@@ -1161,131 +1159,78 @@ def componentInformation():
         UiFinished=True
     except:
       continue
-# def server():
-#   '''服务器输出读取和状态监控'''
-#   global serverProcess,serverState,forms,commandQueue,restart,stopFlag
-#   forms["setting"]["start"]["selectfile"].setDisabled(True)
-#   forms["setting"]["start"]["filepath"].setDisabled(True)
-#   serverState=1
-#   serverProcess=subprocess.Popen(
-#     forms["setting"]["start"]["filepath"].text(),
-#     stdout=subprocess.PIPE,
-#     stdin=subprocess.PIPE,
-#     universal_newlines=True,
-#     cwd=os.path.split(forms["setting"]["start"]["filepath"].text())[0],
-#     bufsize=1,
-#     encoding="UTF-8"
-#     )
-#   logQueue.put("#cls")
-#   logQueue.put("[<span style='color:#007ACC'>Dylan</span>]服务器启动中...")
-#   stopFlag=0
-#   started=0
-#   print(serverProcess.pid)
-#   while serverState==1:
-#     if stopFlag>0:
-#       stopFlag-=1
-#     try:
-#       log=""
-#       log=serverProcess.stdout.readline()
-#     except:
-#       pass
-#     if log!=None and not re.search('^[\n\s\r]+?$',log) and log!="":
-#       regQueue.put({
-#         "log":outputRecognition(log),
-#         "type":"console"
-#       })
-#       if settings["console"]["enableOutputToLog"]:
-#         logger(log)
-#       log_=outputRecognition(log)
-#       if re.search('stop',log_,re.I) or re.search('exit',log_,re.I) or re.search('quit',log_,re.I):
-#         stopFlag=10
-#       if ((re.search("Server\sstarted\.$",log_) or log_.find("Done")>0)) and started==0:
-#         forms["panel"]["version"].setText(version[:10])
-#         forms["panel"]["gamemode"].setText(gamemode)
-#         forms["panel"]["difficulty"].setText(difficulty)
-#         forms["panel"]["state"].setText("已启动")
-#         forms["panel"]["levelname"].setText(levelname[:20])
-#         forms["panel"]["port"].setText(ipv4+" /"+ipv6)
-#         started=1
-#       if started==0:
-#         if log_.find("Version")>0:
-#           version=re.sub("^.+?(version|Version)[:\s]([0-9\.]+).+$",r"\2",log_)
-#         elif log_.find("Game mode")>0 :
-#           if log_.find("Survival")>0:
-#             gamemode="生存"
-#           elif log_.find("Creative")>0:
-#             gamemode="创造"
-#           else:
-#             gamemode="冒险"
-#         elif log_.find("Difficulty")>0:
-#           if log_.find("PEACEFUL")>0:
-#             difficulty="和平"
-#           elif log_.find("EASY")>0:
-#             difficulty="简单"
-#           elif log_.find("NORMAL")>0:
-#             difficulty="普通"
-#           else:
-#             difficulty="困难"
-#         elif log_.find("Level Name")>0:
-#           levelname=re.sub("^(.+?)(Level\sName)[:\s]+?(.+?)$",r"\3",log_)
-#         elif log_.find("IPv4")>0:
-#           ipv4=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
-#         elif log_.find("IPv6")>0:
-#           ipv6=re.sub("^(.+?)(port)[:\s]+?(.+?)$",r"\3",log_)
-#         forms["panel"]["state"].setText("启动中")
-#       log=escapeLog(log)
-#       log=colorLog(log,forms["setting"]["console"]["colorfulLogOut"].currentIndex())
-#       logQueue.put(log)
-#     try:
-#       psutil.Process(serverProcess.pid)
-#     except:
-#       if settings["start"]["autoRestart"] and stopFlag==0:
-#         restart=True
-#       serverState=0
-#     finally:
-#       if bool(serverProcess.poll()) or serverState==0:
-#         serverState=0
-#         logQueue.put("<br>")
-#         if stopFlag>0:
-#           logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程已退出"))
-#         elif stopFlag==-1:
-#           logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程被强制结束"))
-#         else:
-#           logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器进程疑似异常终止"))
-#         time.sleep(0.05)
-#         forms["panel"]["port"].setText("- / -")
-#         forms["panel"]["levelname"].setText("-")
-#         forms["panel"]["difficulty"].setText("-")
-#         forms["panel"]["gamemode"].setText("-")
-#         forms["panel"]["state"].setText("未启动")
-#         forms["panel"]["version"].setText("-")
-#         forms["panel"]["input"].setText("")
-#         forms["panel"]["restart"].setDisabled(True)
-#         forms["panel"]["forcestop"].setDisabled(True)
-#         forms["panel"]["input"].setDisabled(True)
-#         time.sleep(0.1)
-#         if restart:
-#           break
-#         forms["panel"]["start"].setDisabled(False)
-#         forms["panel"]["restart"].setDisabled(True)
-#         forms["panel"]["stop"].setDisabled(True)
-#         forms["setting"]["start"]["selectfile"].setDisabled(False)
-#         forms["setting"]["start"]["filepath"].setDisabled(False)
-#         break
-#     try:
-#       if not MainWindow.isVisible():
-#         serverProcess.stdin.write("stop\n")
-#         break
-#     except:
-#       serverProcess.stdin.write("stop\n")
-#       break
+
+def updateWidgets():
+  '''更新组件信息'''
+  while True:
+    time.sleep(0.5)
+    if forms=={}:
+      continue
+    forms["timedTask"]["timedTask_state"].setText("误差时间："+task.deviation()+"s")
+    if server.isRunning():
+      forms["panel"]["restart"].setDisabled(False)
+      forms["panel"]["forcestop"].setDisabled(False)
+      forms["panel"]["input"].setDisabled(False)
+      forms["panel"]["start"].setDisabled(True)
+      forms["panel"]["restart"].setDisabled(False)
+      forms["panel"]["stop"].setDisabled(False)
+      forms["setting"]["start"]["selectfile"].setDisabled(True)
+      forms["setting"]["start"]["filepath"].setDisabled(True)
+      forms["panel"]["cpu"].setText(str(psutil.cpu_percent())+"%")
+      forms["panel"]["ram"].setText(str(psutil.virtual_memory()[2])+"%")
+    elif not server.isWaitingRestart():
+      forms["panel"]["port"].setText("- / -")
+      forms["panel"]["levelname"].setText("-")
+      forms["panel"]["difficulty"].setText("-")
+      forms["panel"]["gamemode"].setText("-")
+      forms["panel"]["state"].setText("未启动")
+      forms["panel"]["version"].setText("-")
+      forms["panel"]["input"].setText("")
+      forms["panel"]["restart"].setDisabled(True)
+      forms["panel"]["forcestop"].setDisabled(True)
+      forms["panel"]["input"].setDisabled(True)
+      forms["panel"]["start"].setDisabled(False)
+      forms["panel"]["restart"].setDisabled(True)
+      forms["panel"]["stop"].setDisabled(True)
+      forms["setting"]["start"]["selectfile"].setDisabled(False)
+      forms["setting"]["start"]["filepath"].setDisabled(False)
+      forms["panel"]["cpu"].setText("-%")
+      forms["panel"]["ram"].setText("-%")
+    else:
+      forms["panel"]["port"].setText("- / -")
+      forms["panel"]["levelname"].setText("-")
+      forms["panel"]["difficulty"].setText("-")
+      forms["panel"]["gamemode"].setText("-")
+      forms["panel"]["state"].setText("未启动")
+      forms["panel"]["version"].setText("-")
+      forms["panel"]["input"].setText("")
+      forms["panel"]["restart"].setDisabled(True)
+      forms["panel"]["forcestop"].setDisabled(True)
+      forms["panel"]["input"].setDisabled(True)
+      forms["panel"]["cpu"].setText("-%")
+      forms["panel"]["ram"].setText("-%")
+    if server.isRunning() and server.info()!={}:
+      try:
+        forms["panel"]["version"].setText(server.info()["version"][:10])
+        forms["panel"]["gamemode"].setText(server.info()["gamemode"])
+        forms["panel"]["difficulty"].setText(server.info()["difficulty"])
+        forms["panel"]["state"].setText("已启动")
+        forms["panel"]["levelname"].setText(server.info()["levelname"][:20])
+        forms["panel"]["port"].setText(server.info()["port"])
+      except:
+        pass
+    if botState==1:
+      if qq!=0:
+        forms["bot"]["qq"].setText(str(qq))
+        forms["bot"]["send"].setText(str(MessageSent))
+        forms["bot"]["receive"].setText(str(MessageReceived))
 
 def startBot():
   '''机器人启动程序'''
   global botState,botProcess,forms,settings
   while True:
     time.sleep(1)
-    if forms=="":
+    if forms=={}:
       continue
     if botState==1:
       with open(os.path.join(selfPath,"go-cqhttp.bat"), 'w',encoding='utf-8')as bat:
@@ -1330,57 +1275,6 @@ def startBot():
         forms["bot"]["stop"].setDisabled(True)
       except:
         break
-
-def startServer():
-  '''服务器启动程序'''
-  global serverState,restart
-  while True:
-    time.sleep(0.5)
-    if not UiFinished:
-      continue
-    try:
-      if not MainWindow.isVisible():
-        break
-    except:
-      break
-    if forms!=""and not restart and serverState!=1:
-      forms["panel"]["start"].setDisabled(False)
-      forms["panel"]["restart"].setDisabled(True)
-      forms["panel"]["stop"].setDisabled(True)
-      forms["panel"]["forcestop"].setDisabled(True)
-      forms["setting"]["start"]["selectfile"].setDisabled(False)
-      forms["setting"]["start"]["filepath"].setDisabled(False)
-    if restart:
-      logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]服务器将在5s后重启 Tip:可按下停止按钮停用重启进程"))
-      for i in range(10):
-        time.sleep(0.5)
-        if not restart:
-          logQueue.put(("[<span style='color:#007ACC'>Dylan</span>]重启已取消"))
-          break
-    if serverState==1 or restart:
-      restart=False
-      # server()
-  sys.exit()
-
-def statusMonitoring():
-  '''系统CPU占用与内存使用率监控'''
-  global forms,MainWindow,qq,MessageReceived,MessageSent
-  while True:
-    time.sleep(1)
-    try:
-      if server.isRunning():
-        forms["panel"]["cpu"].setText(str(psutil.cpu_percent())+"%")
-        forms["panel"]["ram"].setText(str(psutil.virtual_memory()[2])+"%")
-      elif forms!="":
-        forms["panel"]["cpu"].setText("-%")
-        forms["panel"]["ram"].setText("-%")
-      if botState==1:
-        if qq!=0:
-          forms["bot"]["qq"].setText(str(qq))
-          forms["bot"]["send"].setText(str(MessageSent))
-          forms["bot"]["receive"].setText(str(MessageReceived))
-    except:
-      break
 
 httpServer = Flask(__name__)
 
@@ -1490,11 +1384,12 @@ if __name__=="__main__":
   botQueue=queue.Queue(maxsize=0)
   regQueue=queue.Queue(maxsize=0)
   commandQueue=queue.Queue(maxsize=0)
+  task=Task(commandQueue)
   server=Server(commandQueue,logQueue,regQueue,selfPath)
   permissionList=[]
   qq=0
   botState=0
-  forms=""
+  forms={}
   if not os.path.exists(consolePath):
     print("console.html文件不存在")
     sys.exit()
@@ -1502,8 +1397,8 @@ if __name__=="__main__":
     os.makedirs(os.path.join(selfPath,"log"))
   getComponentInformation=threading.Thread(target=componentInformation,daemon=True)
   getComponentInformation.start()
-  monitoringThread=threading.Thread(target=statusMonitoring,daemon=True)
-  monitoringThread.start()
+  updating=threading.Thread(target=updateWidgets,daemon=True)
+  updating.start()
   botHttpThread=threading.Thread(target=runHttp,daemon=True)
   botHttpThread.start()
   botThread=threading.Thread(target=startBot,daemon=True)
