@@ -31,6 +31,7 @@ from task import *
 
 
 class splash(QSplashScreen):
+  '''启动页面'''
   def mousePressEvent(self, event):
     pass
 
@@ -40,7 +41,6 @@ class gui(QWidget,Ui_Form):
     '''主窗口设置'''
     super(gui, self).__init__(parent)
     self.setupUi(self)
-
     global forms
     channel.registerObject("obj", Function)
     self.setWindowTitle("Dylan "+VERSION)
@@ -640,12 +640,12 @@ class gui(QWidget,Ui_Form):
     self.themeId=themeId
     if themeId==0:
       self.setting_scrollArea.setStyleSheet(
-        "#setting_scrollAreaWidgetContents{\nbackground:rgb(255,255,255);}")
+        "#setting_scrollAreaWidgetContents{background:rgb(255,255,255);}")
       self.setHtml("default")
     elif themeId==1:
       qApp.setStyle("Fusion")
       self.setting_scrollArea.setStyleSheet(
-        "#setting_scrollAreaWidgetContents{\nbackground:rgb(252,252,252);}")
+        "#setting_scrollAreaWidgetContents{background:rgb(252,252,252);}")
       self.setHtml("fusion")
     elif themeId==2:
       qApp.setStyle("Fusion")
@@ -1117,7 +1117,7 @@ def componentInformation():
         if  re.search('^[\d]{6,16}$',text) and text!="":
           groupList.append(int(text))
       for text in forms["setting"]["msg"]["permissionList"].toPlainText().split("\n"):
-        if  re.search('^[\d]{6,16}$',text) and text!="":
+        if  re.search('^[\d]{5,13}$',text) and text!="":
           permissionList.append(int(text))
       settings={
         "type":"settings",
@@ -1375,8 +1375,6 @@ if __name__=="__main__":
   channel = QWebChannel()
   Function = Functions()
   VERSION="Alpha 2.1.20220322"
-  restart=False
-  newVersion=None
   stopSavingSetting=False
   consolePath=os.path.join(selfPath,"attachment","console.html")
   icoPath=os.path.join(selfPath,"attachment","ico.png")

@@ -134,7 +134,7 @@ class Server(object):
             if self.restart:
               self.start()
           break
- 
+
   def outputCommand(self,command:str):
     '''将指令输出至bds和控制台'''
     if self.settings["console"]["outputCommandToConsole"]:
@@ -165,6 +165,29 @@ class Server(object):
       ) as logFile:
       logFile.write(outputRecognition(text)+"\n")
 
+  def inputCommand(self):
+    '''输入命令'''
+    while self.isRunning:
+      if not self.commandQueue.empty():
+        self.outputCommand(self.commandQueue.get())
+      time.sleep(0.1)
+
+  def forceStop(self):
+    '''强制结束进程'''
+    process=psutil.Process(self.serverProcess.pid)
+    while True:
+      if process.name()!="cmd.exe":
+        process.terminate()
+        self.stopFlag=-1
+        break
+      else:
+        if process.children()!=[]:
+          process=process.children()[0]
+        else:
+          break
+    self.running=False
+    self.restart=False
+
   def updateSettings(self,settings:dict):
     '''更新设置'''
     self.settings=settings
@@ -184,26 +207,3 @@ class Server(object):
   def changeRestart(self,restart):
     '''更改重启状态'''
     self.restart=restart
-
-  def inputCommand(self):
-    '''输入命令'''
-    while self.isRunning:
-      if not self.commandQueue.empty():
-        self.outputCommand(self.commandQueue.get())
-      time.sleep(0.1)
-  
-  def forceStop(self):
-    '''强制结束进程'''
-    process=psutil.Process(self.serverProcess.pid)
-    while True:
-      if process.name()!="cmd.exe":
-        process.terminate()
-        self.stopFlag=-1
-        break
-      else:
-        if process.children()!=[]:
-          process=process.children()[0]
-        else:
-          break
-    self.running=False
-    self.restart=False
