@@ -1366,6 +1366,7 @@ if __name__=="__main__":
         settings=json.load(jsonFile)
       except:
         settings={}
+  QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
   app=QtWidgets.QApplication(sys.argv)
   splashWindow=splash()
   splashWindow.setAttribute(Qt.WA_TranslucentBackground)
