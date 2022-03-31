@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/ Version-Alpha%202-yellow">
   </a>
   <a href="#">
-    <img src="https://img.shields.io/badge/ State-%E6%9B%B4%E6%96%B0%E4%B8%AD-orange">
+    <img src="https://img.shields.io/badge/%20State-%E5%81%9C%E6%9B%B4-orange">
   </a> 
   <a href="https://github.com/Zaiton233/Dylan/commits/main">
     <img src="https://img.shields.io/github/last-commit/Zaiton233/Dylan/main">
