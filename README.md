@@ -17,6 +17,7 @@
 </p>
 
 ---  
+### 现已用C#重写：https://github.com/Zaitonn/Serein 此repo不再更新
 ### 使用方法&界面介绍 
 https://docs.qq.com/doc/p/843b94ec1a19c9592dbcccc7b289e688013e05fc?dver=3.0.27447048 
 
